@@ -1,5 +1,8 @@
 node_modules/
 .deploy
 # Project exclude paths
-/.meteor/
+/.meteor/local
 /tests/
+development.json
+deployment.json
+.idea
