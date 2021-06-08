@@ -227,7 +227,7 @@ export default function Navbar(props) {
   const appLogo = (
     <>
       <Typography variant="h6" component="h1" className={classes.title}>
-        Sputnik DAO v1 Stats - under development
+        Sputnik DAO v1 Stats
       </Typography>
     </>
   );

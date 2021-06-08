@@ -160,21 +160,21 @@ const Index = () => {
         <Link
           component="button"
           variant="body2"
+          color="inherit"
           onClick={() => handleDaoClick(params.value)}
         >
           {params.value}
         </Link>
       )
     },
-    {field: 'nearAmount', headerName: 'Ⓝ Value', width: 120, type: 'number'},
-    {field: 'usdAmount', headerName: '$ Value', width: 120, type: 'number', sortable: false},
-    {field: 'proposals', headerName: 'Proposals', type: 'number', width: 120},
-    {field: 'progress', headerName: 'In Progress', type: 'number', width: 120},
-    {field: 'successful', headerName: 'Successful', type: 'number', width: 125},
-    {field: 'failed', headerName: 'Failed', type: 'number', width: 100},
-    {field: 'expired', headerName: 'Expired', type: 'number', width: 100},
+    {field: 'nearAmount', headerName: 'Ⓝ Value', width: 140, type: 'number'},
+    {field: 'usdAmount', headerName: '$ Value', width: 140, type: 'number', sortable: false},
+    {field: 'proposals', headerName: 'Proposals', type: 'number', width: 140},
+    {field: 'progress', headerName: 'In Progress', type: 'number', width: 150},
+    {field: 'successful', headerName: 'Successful', type: 'number', width: 150},
+    {field: 'failed', headerName: 'Failed', type: 'number', width: 120},
+    {field: 'expired', headerName: 'Expired', type: 'number', width: 125},
   ];
-
 
   let tvl = 0;
   let rows = [];
@@ -186,31 +186,33 @@ const Index = () => {
       let failed = 0;
       let progress = 0;
       let expired = 0;
-      item.proposals.map((i, k) => {
-        if (i.status === 'Success') {
-          successful = successful + 1;
-        }
-        if (i.status === 'Fail') {
-          failed = failed + 1;
-        }
+      if (item.proposals) {
+        item.proposals.map((i, k) => {
+          if (i.status === 'Success') {
+            successful = successful + 1;
+          }
+          if (i.status === 'Fail') {
+            failed = failed + 1;
+          }
 
-        if (i.status === 'Vote' && i.vote_period_end > (new Date()).getTime() * 1000 * 1000) {
-          progress = progress + 1;
-        }
+          if (i.status === 'Vote' && i.vote_period_end > (new Date()).getTime() * 1000 * 1000) {
+            progress = progress + 1;
+          }
 
-        if (i.status === 'Vote' && i.vote_period_end < (new Date()).getTime() * 1000 * 1000) {
-          expired = expired + 1;
-        }
+          if (i.status === 'Vote' && i.vote_period_end < (new Date()).getTime() * 1000 * 1000) {
+            expired = expired + 1;
+          }
 
-        //console.log(i);
-      })
+          //console.log(i);
+        })
+      }
 
       const row = {
         id: id,
         daoName: item.daoName,
         nearAmount: new Decimal(item.amount / yoctoNEAR).toFixed(0),
         usdAmount: "$" + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-        proposals: item.proposals.length,
+        proposals: item.proposals ? item.proposals.length : 0,
         progress: progress,
         successful: successful,
         failed: failed,
@@ -328,6 +330,7 @@ const Index = () => {
                 </CardContent>
               </Card>
             </Grid>
+            {/*}
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
@@ -343,14 +346,16 @@ const Index = () => {
                 </CardContent>
               </Card>
             </Grid>
+            */}
           </Grid>
           <Grid container spacing={3}>
             <Grid item xs={12} md={12}>
               {!isLoadingDaoData && !isLoadingNearPrice ?
-                <div style={{height: 1750, width: '100%'}}>
+                <div>
                   <DataGrid rows={rows}
+                            autoHeight={true}
                             columns={columns}
-                            pageSize={30}
+                            pageSize={100}
                             components={{
                               Toolbar: ExportToolbar,
                             }}/>

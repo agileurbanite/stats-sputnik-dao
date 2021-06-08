@@ -17,7 +17,6 @@ const connection = new autobahn.Connection({
 connection.onopen = s => {
   session = s;
 
-
   /*
   storeTransactions().then((r) => {
     console.log('done');

@@ -3,12 +3,13 @@ import {sha256} from "js-sha256";
 import {Meteor} from "meteor/meteor";
 import {SyncedCron} from 'meteor/littledata:synced-cron';
 import {DaoData} from "../imports/api/data";
+import {Decimal} from "decimal.js";
 
 export const factory = 'sputnikdao.near';
 export const todayDate = new Date().toISOString().slice(0, 10);
 
-//export const NEAR_RPC_URL = 'https://rpc.mainnet.near.org'
-export const NEAR_RPC_URL = 'http://45.157.177.152:3030';
+export const NEAR_RPC_URL = 'https://rpc.mainnet.near.org'
+//export const NEAR_RPC_URL = 'http://45.157.177.152:3030';
 const provider = new nearApi.providers.JsonRpcProvider(NEAR_RPC_URL);
 const connection = new nearApi.Connection(NEAR_RPC_URL, provider, {});
 const account = new nearApi.Account(connection, '');
@@ -27,17 +28,37 @@ async function getDaoList(factory) {
 
 async function getDaoData(dao) {
   const state = await accountExists(dao);
-
   if (state) {
     const council = await account.viewFunction(dao, 'get_council', {})
     const purpose = await account.viewFunction(dao, 'get_purpose', {})
     const votePeriod = await account.viewFunction(dao, 'get_vote_period', {})
     const bond = await account.viewFunction(dao, 'get_bond', {})
 
-    /* change to pagination */
-    let proposals = await account.viewFunction(dao, 'get_proposals', {from_index: 0, limit: 1000000})
+    let limit = 100;
+    let fromIndex = 0;
+    let numberProposals = await account.viewFunction(dao, 'get_num_proposals', {})
+    console.log(dao + ": " + numberProposals);
+    let proposals = [];
+
+    if (numberProposals > 100) {
+      let pages = new Decimal(numberProposals / limit).toFixed(0);
+      let i;
+      for (i = 0; i <= pages; i++) {
+        fromIndex = limit * i;
+        let proposals2;
+        try {
+          proposals2 = await account.viewFunction(dao, 'get_proposals', {from_index: fromIndex, limit: limit})
+        } catch (e) {
+          console.log(e)
+        }
+        Array.prototype.push.apply(proposals, proposals2);
+      }
+    } else {
+      proposals = await account.viewFunction(dao, 'get_proposals', {from_index: fromIndex, limit: limit})
+    }
+
     proposals.forEach(function (v) {
-      delete v.votes
+      delete v.votes;
     });
 
     return {

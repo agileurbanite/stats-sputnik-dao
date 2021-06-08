@@ -7,15 +7,23 @@ import Link from '@material-ui/core/Link';
 
 function Copyright() {
   return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      <Link color="inherit" href="/">
-        Sputnik Dao Stats
-      </Link>{' '}
-      {new Date().getFullYear()}
-      <h3>Developed by Stardust Staking and Solutions OÜ, Tallinn, Estonia, <a href="https://starduststaking.com" target="_blank">https://starduststaking.com</a></h3>
-      The software is an <b>open source</b> and provided “as is”, without warranty of any kind.
-      View on <a href="https://github.com/Stardust-Staking" target="_blank" rel="nofollow">Github</a>
-    </Typography>
+    <CssBaseline>
+      <Typography variant="body2" color="textSecondary" align="center">
+        <Link color="inherit" href="/">
+          Sputnik Dao Stats
+        </Link>{' '}
+        {new Date().getFullYear()}
+        <h3>Proudly presented to you by <Link target="_blank" color="inherit" href="https://starduststaking.com">
+          Stardust Staking and Solutions
+        </Link>
+        </h3>
+        The software is an <b>open source</b> and provided “as is”, without warranty of any kind.
+        View on <Link target="_blank" rel="nofollow" color="inherit" href="https://github.com/Stardust-Staking/stats-sputnik-dao">
+        Github
+      </Link>
+
+      </Typography>
+    </CssBaseline>
   );
 }
 
