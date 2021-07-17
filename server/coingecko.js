@@ -43,7 +43,7 @@ if (Meteor.isServer) {
   SyncedCron.add({
     name: 'Pull Near Price',
     schedule: function (parser) {
-      return parser.text('every 60 min');
+      return parser.text('every 10 min');
     },
     job: async function () {
       try {

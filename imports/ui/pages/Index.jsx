@@ -34,7 +34,6 @@ const useNearPrice = () =>
   useTracker(() => {
     const subscription = Meteor.subscribe("NearPrice");
     const nearPrice = NearPrice.find().fetch();
-
     const meteorStatus = Meteor.status();
 
     return {
@@ -206,6 +205,8 @@ const Index = () => {
           //console.log(i);
         })
       }
+
+      console.log(nearPrice[0].near_price_data.current_price.usd)
 
       const row = {
         id: id,
