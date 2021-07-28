@@ -16,6 +16,7 @@ const connection = new autobahn.Connection({
 
 connection.onopen = s => {
   session = s;
+  //console.log(session)
 
   /*
   storeTransactions().then((r) => {
@@ -24,6 +25,7 @@ connection.onopen = s => {
     console.log(e);
   })
   */
+
 
 };
 
@@ -71,7 +73,7 @@ async function getTransactions(block_timestamp) {
      ORDER BY t.block_timestamp ASC
      LIMIT :limit
     `, {
-      limit: 500,
+      limit: 300,
       block_timestamp: block_timestamp
     }
   ]).then(data => {
@@ -89,7 +91,7 @@ if (Meteor.isServer) {
   SyncedCron.add({
     name: 'Fetch Transactions',
     schedule: function (parser) {
-      return parser.text('every 30 minutes');
+      return parser.text('every 1 minutes');
     },
     job: async function () {
       await storeTransactions()
@@ -99,12 +101,22 @@ if (Meteor.isServer) {
 
 
 async function storeTransactions() {
-  let blockTimestamp = 1598366209232845339;
-  let len = 500;
+  let d = new Date();
+  d.setDate(d.getDate() - 3);
+  let blockTimestamp = d.getTime() * 1000 * 1000;
+  /* To received the data from Epoch2, uncomment below */
+  //let blockTimestamp = 1598366209232845339;
+  /* -------------------------------------------------- */
+  let len = 300;
   let offset = 0;
   while (len > 0) {
     const transactions = await getTransactions(blockTimestamp);
-    len = transactions.length;
+    if (transactions) {
+      len = transactions.length;
+    } else {
+      len = 0;
+      console.log('most likely an error occurred')
+    }
     if (len > 1) {
 
       blockTimestamp = transactions[len - 1].block_timestamp;
