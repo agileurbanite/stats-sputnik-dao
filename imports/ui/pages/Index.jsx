@@ -206,7 +206,6 @@ const Index = () => {
         })
       }
 
-      console.log(nearPrice[0].near_price_data.current_price.usd)
 
       const row = {
         id: id,
@@ -284,7 +283,7 @@ const Index = () => {
                   <Typography className={classes.pos} color="textSecondary">
                     TVL
                   </Typography>
-                  <Typography variant="h4" component="h4">
+                  <Typography variant="h5" component="h5">
                     {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' Ⓝ' : null}
                   </Typography>
                   <Typography variant="h5" component="h5" color="textSecondary">
@@ -320,7 +319,7 @@ const Index = () => {
                   <Typography className={classes.title} color="textSecondary" gutterBottom>
                     Total Payout
                   </Typography>
-                  <Typography variant="h4" component="h4">
+                  <Typography variant="h5" component="h5">
                     {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' Ⓝ' : null}
                   </Typography>
                   <Typography variant="h5" component="h5" color="textSecondary" gutterBottom>

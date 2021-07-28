@@ -1,8 +1,55 @@
 import {Meteor} from "meteor/meteor";
 import {SyncedCron} from 'meteor/littledata:synced-cron';
 
+/*
+async function queryPg(block_timestamp) {
+  const {Client} = require('pg')
+  const connectionString = 'postgres://public_readonly:nearprotocol@104.199.89.51/mainnet_explorer'
+
+  let q =
+    `SELECT *
+     FROM transactions t,
+          receipts r,
+          blocks b,
+          transaction_actions a,
+          action_receipt_actions ra,
+          execution_outcomes e
+     WHERE t.transaction_hash = r.originated_from_transaction_hash
+       AND r.receipt_id = e.receipt_id
+       AND b.block_timestamp = r.included_in_block_timestamp
+       AND ra.receipt_id = r.receipt_id
+       AND t.transaction_hash = a.transaction_hash
+       AND a.action_kind = 'FUNCTION_CALL'
+       AND e.status = 'SUCCESS_VALUE'
+       AND r.predecessor_account_id != 'system'
+       AND t.receiver_account_id LIKE ('%.sputnikdao.near')
+       AND t.block_timestamp >= $1
+     ORDER BY t.block_timestamp ASC
+     LIMIT 300
+    `;
+
+  const values = [block_timestamp]
+  const client = new Client({
+    connectionString: connectionString
+  });
+  await client.connect()
+  const res = await client.query(q, values);
+  console.log(res.rows.length);
+  await client.end()
+  return res.rows;
+}
+
+/*
+queryPg(1598366209232845339).then((r) => {
+  //console.log(r);
+}).catch((e) => {
+  console.log(e);
+})
+*/
+
+
 const autobahn = require("autobahn");
-import {ConsolidatedDataDeposits, TxActions} from "../imports/api/data";
+import {TxActions} from "../imports/api/data";
 
 
 let session;
@@ -18,13 +65,13 @@ connection.onopen = s => {
   session = s;
   //console.log(session)
 
-  /*
+/*
   storeTransactions().then((r) => {
     console.log('done');
   }).catch((e) => {
     console.log(e);
   })
-  */
+*/
 
 
 };
