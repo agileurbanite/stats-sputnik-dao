@@ -78,6 +78,7 @@ connection.onopen = s => {
 
 connection.onclose = reason => {
   console.log(reason);
+  session.open();
 };
 
 connection.open();
