@@ -8,36 +8,20 @@ import {
   Switch,
   Slider,
   Divider,
-  Avatar,
-  Chip,
   Box,
   TextField,
   InputBase,
-  Paper,
-  Menu
 } from "@material-ui/core";
 import {alpha, makeStyles, withStyles } from '@material-ui/core/styles';
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
-import TuneIcon from '@material-ui/icons/Tune';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Brightness2Icon from '@material-ui/icons/Brightness2';
 import CloseIcon from '@material-ui/icons/Close';
 import React, {useState, useEffect} from "react";
 import {useGlobalState, useGlobalMutation} from '../../utils/container'
 import MuiDialogTitle from '@material-ui/core/DialogTitle';
-import Grow from '@material-ui/core/Grow';
-import Popper from '@material-ui/core/Popper';
-import MenuItem from '@material-ui/core/MenuItem';
-import MenuList from '@material-ui/core/MenuList';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import DragHandleIcon from '@material-ui/icons/DragHandle';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import Checkbox from '@material-ui/core/Checkbox';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
 import ColumnSettings from "./ColumnSettings";
 
 const useStyles = makeStyles((theme) => ({
