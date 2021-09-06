@@ -1,5 +1,6 @@
 import {Meteor} from "meteor/meteor";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import clsx from 'clsx';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {useTracker} from "meteor/react-meteor-data";
@@ -80,6 +81,8 @@ const Index = () => {
   const {txActions, isLoadingTxActions} = useTxActions();
 
 
+  console.log('stateCtx', stateCtx);
+
   const useStyles = makeStyles((theme) => ({
     root: {
       display: 'flex',
@@ -142,6 +145,7 @@ const Index = () => {
       e.preventDefault();
     }
   };
+
 
   const handleDaoClick = (value) => {
     window.open("https://sputnik.fund/#/" + value, '_blank').focus();
@@ -241,11 +245,17 @@ const Index = () => {
     allAccounts.push(item.signer_account_id)
   });
 
+
+  function filterNearValue(value){
+    console.log('filterNearValue', value);
+  }
+
+
   return (
     <div>
       <div className={classes.root}>
         <CssBaseline/>
-        <Navbar handleSearchClick={handleSearchClick}/>
+        <Navbar filterNearValue={filterNearValue} handleSearchClick={handleSearchClick}/>
         <Container component="main" className={classes.main}>
 
           <Grid container
