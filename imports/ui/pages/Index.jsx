@@ -1,6 +1,5 @@
 import {Meteor} from "meteor/meteor";
 import React, {useEffect, useState} from "react";
-import clsx from 'clsx';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {useTracker} from "meteor/react-meteor-data";
@@ -80,9 +79,6 @@ const Index = () => {
   const {allDeposits, isLoadingAllDeposits} = useAllDeposits();
   const {txActions, isLoadingTxActions} = useTxActions();
 
-
-  console.log('stateCtx', stateCtx);
-
   const useStyles = makeStyles((theme) => ({
     root: {
       display: 'flex',
@@ -153,10 +149,10 @@ const Index = () => {
 
 
   const columns = [
-    {field: 'id', headerName: 'ID', hide: true},
+    {field: 'id', headerName: 'ID', hide: true, width: 120},
     {
       field: 'daoName',
-      headerName: 'DAO',
+      headerName: 'Name',
       width: 250,
       disableClickEventBubbling: true,
       renderCell: (params) => (
@@ -178,6 +174,18 @@ const Index = () => {
     {field: 'failed', headerName: 'Failed', type: 'number', width: 120},
     {field: 'expired', headerName: 'Expired', type: 'number', width: 125},
   ];
+
+  const [stateColumns, setColSettings] = React.useState(columns);
+
+  const hideColumn = (event) => {
+    const tempColumns = stateColumns.map(column =>
+        column.field === event.target.id
+            ? { ...column, hide: !event.target.checked }
+            : column
+    );
+    setColSettings(tempColumns);
+  }
+
 
   let tvl = 0;
   let rows = [];
@@ -227,7 +235,6 @@ const Index = () => {
     });
   }
 
-
   function ExportToolbar() {
     return (
       <GridToolbarContainer>
@@ -247,7 +254,7 @@ const Index = () => {
 
 
   function filterNearValue(value){
-    console.log('filterNearValue', value);
+    let defRows = [...rows];
   }
 
 
@@ -255,12 +262,12 @@ const Index = () => {
     <div>
       <div className={classes.root}>
         <CssBaseline/>
-        <Navbar filterNearValue={filterNearValue} handleSearchClick={handleSearchClick}/>
+        <Navbar filterNearValue={filterNearValue} handleSearchClick={handleSearchClick} hideColumn={hideColumn} columns={stateColumns}/>
         <Container component="main" className={classes.main}>
 
           <Grid container
                 spacing={3}
-                justify="center"
+                justifyContent="center"
                 className={classes.container}
           >
             <Grid item xs={12} sm={6} md={6}>
@@ -278,7 +285,7 @@ const Index = () => {
 
           <Grid container
                 spacing={3}
-                justify="center"
+                justifyContent="center"
                 className={classes.container}
           >
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
@@ -362,9 +369,10 @@ const Index = () => {
             <Grid item xs={12} md={12}>
               {!isLoadingDaoData && !isLoadingNearPrice ?
                 <div>
-                  <DataGrid rows={rows}
+                  <DataGrid
+                            rows={rows}
                             autoHeight={true}
-                            columns={columns}
+                            columns={stateColumns}
                             pageSize={100}
                             components={{
                               Toolbar: ExportToolbar,

@@ -12,9 +12,11 @@ import {
   Chip,
   Box,
   TextField,
-  InputBase
+  InputBase,
+  Paper,
+  Menu
 } from "@material-ui/core";
-import {fade, makeStyles, withStyles } from '@material-ui/core/styles';
+import {alpha, makeStyles, withStyles } from '@material-ui/core/styles';
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
@@ -25,10 +27,19 @@ import CloseIcon from '@material-ui/icons/Close';
 import React, {useState, useEffect} from "react";
 import {useGlobalState, useGlobalMutation} from '../../utils/container'
 import MuiDialogTitle from '@material-ui/core/DialogTitle';
+import Grow from '@material-ui/core/Grow';
+import Popper from '@material-ui/core/Popper';
+import MenuItem from '@material-ui/core/MenuItem';
+import MenuList from '@material-ui/core/MenuList';
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import DragHandleIcon from '@material-ui/icons/DragHandle';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import Checkbox from '@material-ui/core/Checkbox';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ColumnSettings from "./ColumnSettings";
 
-const filterDrawer = {
-  width: 240,
-}
 const useStyles = makeStyles((theme) => ({
   root: {
     margin: 0,
@@ -90,9 +101,9 @@ const useStyles = makeStyles((theme) => ({
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.black, 0.15),
+    backgroundColor: alpha(theme.palette.common.black, 0.15),
     '&:hover': {
-      backgroundColor: fade(theme.palette.common.black, 0.25),
+      backgroundColor: alpha(theme.palette.common.black, 0.25),
     },
     marginRight: theme.spacing(2),
     marginLeft: 0,
@@ -137,7 +148,6 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function Navbar(props) {
-  console.log('props', props);
   const classes = useStyles();
   const stateCtx = useGlobalState();
   const mutationCtx = useGlobalMutation();
@@ -217,47 +227,22 @@ export default function Navbar(props) {
   const handleFilterClose = () =>
       setState((prevState) => ({...prevState, filterOpen: false}));
 
+
   const FilterBtn = (
       <IconButton {...{
-        edge: "start",
-        color: "inherit",
         "aria-label": "menu",
         "aria-haspopup": "true",
         onClick: handleFilterOpen,
       }}>
         <FilterListIcon />
       </IconButton>
-  )
+  );
 
 
-  const ColumnSettingsBtn = (
-      <IconButton {...{
-        edge: "start",
-        color: "inherit",
-        "aria-label": "menu",
-        "aria-haspopup": "true",
-        onClick: handleFilterOpen,
-      }}>
-        <TuneIcon />
-      </IconButton>
-  )
-
-  const DarkSwitchBtn = (
-      <IconButton {...{
-        edge: "start",
-        color: "inherit",
-        "aria-label": "menu",
-        "aria-haspopup": "true",
-        onClick: handleDarkModeToggle,
-      }}>
-        {state.darkMode ? <Brightness2Icon />: <Brightness4Icon />}
-      </IconButton>
-  )
-
-  const FiltersDialogTitle = (props) => {
+  const DialogTitle = React.forwardRef((props, ref) => {
     const { children, onClose, ...other } = props;
-    return (
-        <MuiDialogTitle disableTypography className={classes.root} {...other}>
+      return (
+        <MuiDialogTitle disableTypography className={classes.root} {...other} ref={ref}>
           <Typography variant="h6" component="h6">{children}</Typography>
           {onClose ? (
               <IconButton aria-label="close" className={classes.closeButton} onClick={onClose}>
@@ -266,19 +251,41 @@ export default function Navbar(props) {
           ) : null}
         </MuiDialogTitle>
     );
+  });
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleSettingsToggle = (event) => {
+    setAnchorEl(event.currentTarget);
   };
+
+  const handleSettingsClose = () => {
+    setAnchorEl(null);
+  };
+
+
+
+  const DarkSwitchBtn = (
+      <IconButton {...{
+        "aria-label": "menu",
+        "aria-haspopup": "true",
+        onClick: handleDarkModeToggle,
+      }}>
+        {state.darkMode ? <Brightness2Icon />: <Brightness4Icon />}
+      </IconButton>
+  );
 
   const displayDesktop = () => {
     return (
       <Toolbar className={classes.toolbar}>
         {nearLogo}
-        <Divider orientation="vertical" flexItem/>
+        {/*<Divider orientation="vertical" flexItem/>*/}
         {appLogo}
         {/*searchBox*/}
         <Divider className={classes.divider} orientation="vertical" flexItem />
         {DarkSwitchBtn}
         {FilterBtn}
-        {ColumnSettingsBtn}
+        <ColumnSettings hideColumn={props.hideColumn} columns={props.columns}/>
         {getMenuButtons(false)}
       </Toolbar>
     );
@@ -337,7 +344,7 @@ export default function Navbar(props) {
 
   const handleClearNear = ()=>{
     console.log('clear Near');
-    return;
+    return null;
   }
 
   const [valueNear, setNearValue] = React.useState([20, 37]);
@@ -382,9 +389,9 @@ export default function Navbar(props) {
 
   const filterDialog = (
       <>
-        <FiltersDialogTitle id="customized-dialog-title" onClose={handleFilterClose}>
+        <DialogTitle id="customized-dialog-title" onClose={handleFilterClose}>
           Filter
-        </FiltersDialogTitle>
+        </DialogTitle>
         <Divider/>
         {filterNear}
         <Button onClick={() => props.filterNearValue('100')}>Click test</Button>
@@ -423,7 +430,7 @@ export default function Navbar(props) {
 
   return (
     <>
-      <AppBar boxShadow={0} color="default" className={classes.appBar}>
+      <AppBar color="default" className={classes.appBar}>
         {mobileView ? displayMobile() : displayDesktop()}
       </AppBar>
       <Drawer
