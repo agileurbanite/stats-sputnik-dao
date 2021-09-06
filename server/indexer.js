@@ -49,6 +49,7 @@ queryPg(1598366209232845339).then((r) => {
 
 
 const autobahn = require("autobahn");
+
 import {TxActions} from "../imports/api/data";
 
 
@@ -61,9 +62,10 @@ const connection = new autobahn.Connection({
   max_retry_delay: 10
 });
 
-connection.onopen = s => {
+connection.onopen = (s, details) => {
   session = s;
-  //console.log(session)
+  console.log('session open', details);
+//  console.log(session);
 
 /*
   storeTransactions().then((r) => {
@@ -76,8 +78,12 @@ connection.onopen = s => {
 
 };
 
-connection.onclose = reason => {
+connection.onclose = (reason, details) => {
+  console.log('connection close');
+  console.log('Reason:');
   console.log(reason);
+  console.log('Details:');
+  console.log(details);
 };
 
 connection.open();
@@ -96,6 +102,7 @@ async function queryNearCoreTx(q) {
   const procedure = `com.nearprotocol.mainnet.explorer.nearcore-tx`;
   return session.call(procedure, q);
 }
+
 
 
 async function getTransactions(block_timestamp) {
@@ -125,7 +132,7 @@ async function getTransactions(block_timestamp) {
     }
   ]).then(data => {
       //console.log(data)
-      console.log(data.length)
+      console.log(data.length);
       return data;
     }
   ).catch((e) => {
