@@ -149,7 +149,7 @@ const Index = () => {
 
 
   const columns = [
-    {field: 'id', headerName: 'ID', hide: true, width: 120},
+    {field: 'id', headerName: 'ID', hide: true, width: 80},
     {
       field: 'daoName',
       headerName: 'Name',
@@ -167,7 +167,14 @@ const Index = () => {
       )
     },
     {field: 'nearAmount', headerName: 'Ⓝ Value', width: 140, type: 'number'},
-    {field: 'usdAmount', headerName: '$ Value', width: 140, type: 'number', sortable: false},
+    {
+      field: 'usdAmount',
+      headerName: 'Value(USD)',
+      width: 140,
+      type: 'number',
+      valueFormatter: params => `$${params.value}`,
+      sortable: false
+    },
     {field: 'proposals', headerName: 'Proposals', type: 'number', width: 140},
     {field: 'progress', headerName: 'In Progress', type: 'number', width: 150},
     {field: 'successful', headerName: 'Successful', type: 'number', width: 150},
@@ -223,7 +230,7 @@ const Index = () => {
         id: id,
         daoName: item.daoName,
         nearAmount: new Decimal(item.amount / yoctoNEAR).toFixed(0),
-        usdAmount: "$" + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+        usdAmount:  new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
         proposals: item.proposals ? item.proposals.length : 0,
         progress: progress,
         successful: successful,
@@ -234,6 +241,20 @@ const Index = () => {
       rows.push(row);
     });
   }
+
+  const [filteredRows, setFilteredRows] = React.useState(rows);
+  const [filterRanges, setFilterRange] = React.useState([]);
+
+
+
+  function clearFilter(id) {
+    console.log('clearFilter', id)
+  }
+
+  function clearAllFilter(){
+
+  }
+
 
   function ExportToolbar() {
     return (
@@ -252,17 +273,17 @@ const Index = () => {
     allAccounts.push(item.signer_account_id)
   });
 
-
-  function filterNearValue(value){
-    let defRows = [...rows];
-  }
+  const updateRange = (e, data) => {
+    //rows = rows.filter(row=>(parseInt(row[e].toString().replace(',',''))>=data[0] && parseInt(row[e].toString().replace(/,/g, ''))<=data[1]));
+    //console.log('rows', rows);
+  };
 
 
   return (
     <div>
       <div className={classes.root}>
         <CssBaseline/>
-        <Navbar filterNearValue={filterNearValue} handleSearchClick={handleSearchClick} hideColumn={hideColumn} columns={stateColumns}/>
+        <Navbar updateRange={updateRange} clearFilter={clearFilter} handleSearchClick={handleSearchClick} hideColumn={hideColumn} columns={stateColumns} rows={rows}/>
         <Container component="main" className={classes.main}>
 
           <Grid container

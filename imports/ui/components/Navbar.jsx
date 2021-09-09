@@ -2,27 +2,21 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Drawer,
   Switch,
-  Slider,
   Divider,
-  Box,
-  TextField,
   InputBase,
 } from "@material-ui/core";
 import {alpha, makeStyles, withStyles } from '@material-ui/core/styles';
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from '@material-ui/icons/Search';
-import FilterListIcon from '@material-ui/icons/FilterList';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Brightness2Icon from '@material-ui/icons/Brightness2';
-import CloseIcon from '@material-ui/icons/Close';
 import React, {useState, useEffect} from "react";
 import {useGlobalState, useGlobalMutation} from '../../utils/container'
-import MuiDialogTitle from '@material-ui/core/DialogTitle';
 import ColumnSettings from "./ColumnSettings";
+import FilterPanel from "./FilterPanel";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -76,9 +70,6 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "space-between",
   },
-  drawerContainer: {
-    width:340,
-  },
   title: {
     flexGrow: 1,
   },
@@ -96,10 +87,6 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: theme.spacing(3),
       width: 'auto',
     },
-  },
-  clearButton: {
-    textTransform: "none",
-    fontWeight: "bold",
   },
   closeButton: {
     position: 'absolute',
@@ -141,7 +128,6 @@ export default function Navbar(props) {
       {
     mobileView: false,
     drawerOpen: false,
-    filterOpen: stateCtx.config.filterOpen,
     darkMode:  stateCtx.config.darkMode === 'dark',
   });
 
@@ -172,7 +158,7 @@ export default function Navbar(props) {
 
 
 
-  const {mobileView, drawerOpen, filterOpen} = state;
+  const {mobileView, drawerOpen} = state;
 
   useEffect(() => {
     const setResponsiveness = () => {
@@ -204,50 +190,7 @@ export default function Navbar(props) {
         inputProps={{'aria-label': 'search'}}
       />
     </div>
-  )
-
-  const handleFilterOpen = () =>
-      setState((prevState) => ({...prevState, filterOpen: !prevState.filterOpen}));
-  const handleFilterClose = () =>
-      setState((prevState) => ({...prevState, filterOpen: false}));
-
-
-  const FilterBtn = (
-      <IconButton {...{
-        "aria-label": "menu",
-        "aria-haspopup": "true",
-        onClick: handleFilterOpen,
-      }}>
-        <FilterListIcon />
-      </IconButton>
   );
-
-
-  const DialogTitle = React.forwardRef((props, ref) => {
-    const { children, onClose, ...other } = props;
-      return (
-        <MuiDialogTitle disableTypography className={classes.root} {...other} ref={ref}>
-          <Typography variant="h6" component="h6">{children}</Typography>
-          {onClose ? (
-              <IconButton aria-label="close" className={classes.closeButton} onClick={onClose}>
-                <CloseIcon />
-              </IconButton>
-          ) : null}
-        </MuiDialogTitle>
-    );
-  });
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  const handleSettingsToggle = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleSettingsClose = () => {
-    setAnchorEl(null);
-  };
-
-
 
   const DarkSwitchBtn = (
       <IconButton {...{
@@ -268,8 +211,8 @@ export default function Navbar(props) {
         {/*searchBox*/}
         <Divider className={classes.divider} orientation="vertical" flexItem />
         {DarkSwitchBtn}
-        {FilterBtn}
-        <ColumnSettings hideColumn={props.hideColumn} columns={props.columns}/>
+        <FilterPanel {...props}/>
+        <ColumnSettings {...props}/>
         {getMenuButtons(false)}
       </Toolbar>
     );
@@ -326,62 +269,6 @@ export default function Navbar(props) {
     </>
   );
 
-  const handleClearNear = ()=>{
-    console.log('clear Near');
-    return null;
-  }
-
-  const [valueNear, setNearValue] = React.useState([20, 37]);
-
-  function valuetext(value) {
-    return `${value}`;
-  }
-
-  const handleChangeNear = (event, newValue) => {
-    const {id, valueAsNumber} = event.target;
-    let newVal = [...valueNear];
-    if (id === 'nearFrom'){
-      newVal[0] = valueAsNumber;
-    } else {
-      newVal[1] = valueAsNumber;
-    }
-    console.log(id, valueAsNumber, newVal, valueNear);
-//    setNearValue(newValue);
-  };
-
-  const filterNear = (
-    <Box className={classes.root}>
-      <Box component="div" display="flex" alignItems="baseline" justifyContent="space-between">
-        <Typography variant="body2"  component="span">Value (NEAR)</Typography>
-        <Button color="primary" className={classes.clearButton} onClick={handleClearNear}>Clear</Button>
-      </Box>
-      <Box component="div" display="flex">
-        <Slider
-            value={valueNear}
-            onChange={handleChangeNear}
-            valueLabelDisplay="auto"
-            aria-labelledby="range-slider"
-            getAriaValueText={valuetext}
-        />
-      </Box>
-      <Box component="div" display="flex" justifyContent="space-between">
-        <TextField id="nearFrom" variant="filled" label="From" defaultValue={valueNear[0]}  type="number" onChange={handleChangeNear}/>
-        <TextField id="nearTo" variant="filled" label="to" defaultValue={valueNear[1]} type="number" onChange={handleChangeNear} />
-      </Box>
-    </Box>
-  );
-
-  const filterDialog = (
-      <>
-        <DialogTitle id="customized-dialog-title" onClose={handleFilterClose}>
-          Filter
-        </DialogTitle>
-        <Divider/>
-        {filterNear}
-        <Button onClick={() => props.filterNearValue('100')}>Click test</Button>
-      </>
-  );
-
   const darkSwitch = (
     <Switch
       checked={state.darkMode}
@@ -417,17 +304,6 @@ export default function Navbar(props) {
       <AppBar color="default" className={classes.appBar}>
         {mobileView ? displayMobile() : displayDesktop()}
       </AppBar>
-      <Drawer
-              {...{
-                anchor: "right",
-                open: filterOpen,
-                onClose: handleFilterClose,
-              }}
-      >
-        <div className={classes.drawerContainer}>
-          {filterDialog}
-        </div>
-      </Drawer>
     </>
   );
 }

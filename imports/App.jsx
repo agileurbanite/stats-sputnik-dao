@@ -3,7 +3,7 @@ import {Route, Switch} from 'react-router-dom'
 import Index from './ui/pages/Index'
 import {BrowserRouterHook} from './utils/use-router'
 import NotFound from "./ui/pages/NotFound";
-import {createMuiTheme, createTheme, ThemeProvider, responsiveFontSizes} from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, responsiveFontSizes} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {useGlobalState, useGlobalMutation} from './utils/container'
 import blue from '@material-ui/core/colors/blue';

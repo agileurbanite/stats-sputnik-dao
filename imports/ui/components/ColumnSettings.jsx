@@ -5,6 +5,7 @@ import DragHandleIcon from "@material-ui/icons/DragHandle";
 import TuneIcon from "@material-ui/icons/Tune";
 import CloseIcon from "@material-ui/icons/Close";
 
+
 const useStyles = makeStyles((theme) => ({
     root: {
         margin: 0,
@@ -40,8 +41,9 @@ export default function ColumnSettings(props) {
         setAnchorEl(null);
     };
 
-    const DialogTitle = React.forwardRef((props, ref) => {
+    const _DialogTitle = React.forwardRef((props, ref) => {
         const { children, onClose, ...other } = props;
+        console.log('ref', ref);
         return (
             <Box className={classes.dialogTitle} {...other} ref={ref}>
                 <Typography style={{ fontWeight: 600 }} variant="h6" component="h6">{children}</Typography>
@@ -130,11 +132,13 @@ export default function ColumnSettings(props) {
                     anchorEl={anchorEl}
                     keepMounted
                     open={Boolean(anchorEl)}
-                    onClose={handleSettingsClose}
-                >
-                    <DialogTitle id="settings-dialog-title" onClose={handleSettingsClose}>
-                        Column settings
-                    </DialogTitle>
+                    onClose={handleSettingsClose}>
+                    <Box className={classes.dialogTitle}>
+                        <Typography style={{ fontWeight: 600 }} variant="h6" component="h6">Column settings</Typography>
+                            <IconButton aria-label="close" className={classes.closeButton} onClick={handleSettingsClose}>
+                                <CloseIcon />
+                            </IconButton>
+                    </Box>
                     <Divider/>
                     <ColumnItems columns={props.columns}/>
                 </StyledMenu>
