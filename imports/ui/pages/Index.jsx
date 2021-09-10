@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import {useTracker} from "meteor/react-meteor-data";
 import {useGlobalMutation, useGlobalState} from '../../utils/container'
 import {Decimal} from 'decimal.js';
-import {Card, CardContent, Container, Divider, Grid, makeStyles, Typography, Link} from "@material-ui/core";
+import {Card, Box, CardContent, Container, Divider, Grid, makeStyles, Typography, Link, Chip, Button, Toolbar} from "@material-ui/core";
 import {DataGrid, GridToolbarContainer, GridToolbarExport,} from '@material-ui/data-grid';
 
 
@@ -87,6 +87,10 @@ const Index = () => {
       '& .MuiTextField-root': {
         margin: theme.spacing(1),
       },
+      '& .MuiChip-root': {
+        borderRadius: 8,
+      },
+
     },
     main: {
       marginTop: theme.spacing(12),
@@ -131,8 +135,17 @@ const Index = () => {
     },
     container: {
       marginBottom: 20,
-    }
-
+    },
+    clearButton: {
+      textTransform: "none",
+      fontWeight: "bold",
+    },
+    gridFilterPanel: {
+      width: 'fit-content',
+      '& hr': {
+        margin: theme.spacing(0, 0.5),
+      },
+    },
   }));
   const classes = useStyles();
 
@@ -172,7 +185,7 @@ const Index = () => {
       headerName: 'Value(USD)',
       width: 140,
       type: 'number',
-      valueFormatter: params => `$${params.value}`,
+      valueFormatter: params => `$${params.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`,
       sortable: false
     },
     {field: 'proposals', headerName: 'Proposals', type: 'number', width: 140},
@@ -230,7 +243,7 @@ const Index = () => {
         id: id,
         daoName: item.daoName,
         nearAmount: new Decimal(item.amount / yoctoNEAR).toFixed(0),
-        usdAmount:  new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+        usdAmount:  new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0),
         proposals: item.proposals ? item.proposals.length : 0,
         progress: progress,
         successful: successful,
@@ -242,13 +255,36 @@ const Index = () => {
     });
   }
 
-  const [filteredRows, setFilteredRows] = React.useState(rows);
-  const [filterRanges, setFilterRange] = React.useState([]);
+  const [filteredRows, setFilteredRows] = React.useState([]);
+  const [filterRanges, setFilterRange] = React.useState({});
 
+  const setDefFilterRanges = () => {
+    let range = {};
+    for(const col of columns){
+      range[col.field] = [];
+    }
+    //filterRange = range;
+    setFilterRange(range)
+  }
 
+  const multipleFilter = (targetArray, filters) => {
+    let filterKeys = Object.keys(filters);
+    return targetArray.filter((eachObj) => {
+      return filterKeys.every( (eachKey) => {
+        if (!filters[eachKey].length) {
+          return true;
+        }
+        return (parseInt(eachObj[eachKey])>=filters[eachKey][0] && parseInt(eachObj[eachKey])<=filters[eachKey][1]);
+      });
+    });
+  };
 
-  function clearFilter(id) {
-    console.log('clearFilter', id)
+  const clearFilter = (event, id) => {
+    const ranges = filterRanges;
+    ranges[id] = [];
+    console.log('ranges', ranges);
+    setFilterRange(ranges);
+    applyFilters(filterRanges);
   }
 
   function clearAllFilter(){
@@ -274,16 +310,57 @@ const Index = () => {
   });
 
   const updateRange = (e, data) => {
-    //rows = rows.filter(row=>(parseInt(row[e].toString().replace(',',''))>=data[0] && parseInt(row[e].toString().replace(/,/g, ''))<=data[1]));
-    //console.log('rows', rows);
+
   };
 
+  const applyFilters = (filters) => {
+    setFilterRange(filters);
+    setFilteredRows(multipleFilter(rows, filters));
+  }
+
+  const getFilterRanges = () => {
+    return filterRanges ? Object.fromEntries(
+        Object.entries(filterRanges).filter(([key, value]) => value.length > 0)) : {};
+  }
+
+  const getRows = () => {
+    return filteredRows.length>0 ? filteredRows: rows;
+  }
+
+  const GridFilterBtn = (props) => {
+    return (
+        <>
+          {
+            props.filterRanges ? Object.keys(props.filterRanges).map((filter,index) =>(
+                <React.Fragment key={filter}>
+                  <Box>
+                    <Typography component="span" color="textSecondary" variant="body2">{columns.find(column=>column.field===filter).headerName}:</Typography>
+                    <Chip
+                        label={filterRanges[filter][0]+"-"+filterRanges[filter][1]}
+                        onDelete={(e)=>clearFilter(e, filter)}
+                    />
+                  </Box>
+                </React.Fragment>
+            )): null
+          }
+        </>
+    );
+  }
 
   return (
     <div>
       <div className={classes.root}>
         <CssBaseline/>
-        <Navbar updateRange={updateRange} clearFilter={clearFilter} handleSearchClick={handleSearchClick} hideColumn={hideColumn} columns={stateColumns} rows={rows}/>
+        <Navbar
+            updateRange={updateRange}
+            clearFilter={clearFilter}
+            handleSearchClick={handleSearchClick}
+            multipleFilter={multipleFilter}
+            hideColumn={hideColumn}
+            applyFilters={applyFilters}
+            columns={stateColumns}
+            rangeVal = {[]}
+            rows={getRows()}/>
         <Container component="main" className={classes.main}>
 
           <Grid container
@@ -387,11 +464,25 @@ const Index = () => {
             */}
           </Grid>
           <Grid container spacing={3}>
+            <Grid item item xs={12} md={12}>
+              <Box display="flex" justifyContent="flex-start">
+                {
+                  Object.keys(getFilterRanges()).length ?
+                        <Grid container alignItems="center" className={classes.gridFilterPanel}>
+                          <Button color="primary" className={classes.clearButton}>X Clear All</Button>
+                          <Divider orientation="vertical" flexItem />
+                          <GridFilterBtn filterRanges={getFilterRanges()} />
+                        </Grid>
+                  : null
+
+                }
+              </Box>
+            </Grid>
             <Grid item xs={12} md={12}>
               {!isLoadingDaoData && !isLoadingNearPrice ?
                 <div>
                   <DataGrid
-                            rows={rows}
+                            rows={getRows()}
                             autoHeight={true}
                             columns={stateColumns}
                             pageSize={100}
