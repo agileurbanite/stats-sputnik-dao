@@ -127,8 +127,10 @@ const Index = () => {
     },
     daoCard: {
       borderRadius: 15,
-      maxWidth: 250,
-      minHeight: 250,
+      minHeight: 160,
+    },
+    daoCardHeader:{
+      fontWeight: [700]
     },
     table: {
       minWidth: 650,
@@ -258,16 +260,25 @@ const Index = () => {
   const [filteredRows, setFilteredRows] = React.useState([]);
   const [filterRanges, setFilterRange] = React.useState({});
 
+
   const setDefFilterRanges = () => {
     let range = {};
     for(const col of columns){
       range[col.field] = [];
     }
-    //filterRange = range;
     setFilterRange(range)
   }
 
+  const getDefFilterRanges = () => {
+    let range = {};
+    for(const col of columns){
+      range[col.field] = [];
+    }
+    return range;
+  }
+
   const multipleFilter = (targetArray, filters) => {
+    console.log(targetArray, filters);
     let filterKeys = Object.keys(filters);
     return targetArray.filter((eachObj) => {
       return filterKeys.every( (eachKey) => {
@@ -279,10 +290,19 @@ const Index = () => {
     });
   };
 
+
+  const getSliderRangeVal = () => {
+    return filterRanges;
+  }
+
+
+  const getRanges = () =>{
+
+  }
+
   const clearFilter = (event, id) => {
     const ranges = filterRanges;
     ranges[id] = [];
-    console.log('ranges', ranges);
     setFilterRange(ranges);
     applyFilters(filterRanges);
   }
@@ -323,8 +343,8 @@ const Index = () => {
         Object.entries(filterRanges).filter(([key, value]) => value.length > 0)) : {};
   }
 
-  const getRows = () => {
-    return filteredRows.length>0 ? filteredRows: rows;
+  const getFilteredRows = () => {
+    return filteredRows.length>0 ? filteredRows: [...rows];
   }
 
   const GridFilterBtn = (props) => {
@@ -359,8 +379,10 @@ const Index = () => {
             hideColumn={hideColumn}
             applyFilters={applyFilters}
             columns={stateColumns}
-            rangeVal = {[]}
-            rows={getRows()}/>
+            rangeVal = {getDefFilterRanges()}
+            sliderVal = {getSliderRangeVal()}
+            filteredRows = {getFilteredRows()}
+            rows={[...rows]}/>
         <Container component="main" className={classes.main}>
 
           <Grid container
@@ -382,24 +404,30 @@ const Index = () => {
           </Grid>
 
           <Grid container
-                spacing={3}
-                justifyContent="center"
+                spacing={1}
+                justifyContent="space-between"
                 className={classes.container}
           >
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                    {!isLoadingDaoData ? daoData.length : null}
+                  </Typography>
                   <Typography className={classes.title} color="textSecondary" gutterBottom>
                     Number of DAOs
                   </Typography>
-                  <Typography variant="h3" component="h3" gutterBottom>
-                    {!isLoadingDaoData ? daoData.length : null}
+                </CardContent>
+              </Card>
+            </Grid>
+             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+              <Card className={classes.daoCard}>
+                <CardContent>
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                    {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
                   </Typography>
                   <Typography className={classes.pos} color="textSecondary">
-                    TVL
-                  </Typography>
-                  <Typography variant="h5" component="h5">
-                    {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' Ⓝ' : null}
+                    TVL (NEAR)
                   </Typography>
                   <Typography variant="h5" component="h5" color="textSecondary">
                     {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
@@ -410,17 +438,11 @@ const Index = () => {
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
-                  <Typography className={classes.title} color="textSecondary" gutterBottom>
-                    Number of account interactions
-                  </Typography>
-                  <Typography variant="h3" component="h3" gutterBottom>
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {countUnique(allAccounts)}
                   </Typography>
-                  <Typography className={classes.pos} color="textSecondary">
-                    Total transactions
-                  </Typography>
-                  <Typography variant="h4" component="h4">
-                    {txActions.length}
+                  <Typography className={classes.title} color="textSecondary" gutterBottom>
+                    Number of account interactions
                   </Typography>
                   <Typography variant="h5" component="h5" color="textSecondary">
 
@@ -428,19 +450,34 @@ const Index = () => {
                 </CardContent>
               </Card>
             </Grid>
+              <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+              <Card className={classes.daoCard}>
+                <CardContent>
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                    {txActions.length}
+                  </Typography>
+                  <Typography className={classes.pos} color="textSecondary">
+                    Total transactions
+                  </Typography>
+
+                  <Typography variant="h5" component="h5" color="textSecondary">
+
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                    {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                  </Typography>
                   <Typography className={classes.title} color="textSecondary" gutterBottom>
                     Total Payout
                   </Typography>
-                  <Typography variant="h5" component="h5">
-                    {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' Ⓝ' : null}
-                  </Typography>
                   <Typography variant="h5" component="h5" color="textSecondary" gutterBottom>
                     {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                  </Typography>
-                  <Typography variant="h5" component="h5" color="textSecondary">
                   </Typography>
                 </CardContent>
               </Card>
@@ -482,7 +519,7 @@ const Index = () => {
               {!isLoadingDaoData && !isLoadingNearPrice ?
                 <div>
                   <DataGrid
-                            rows={getRows()}
+                            rows={getFilteredRows()}
                             autoHeight={true}
                             columns={stateColumns}
                             pageSize={100}

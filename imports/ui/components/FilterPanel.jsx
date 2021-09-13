@@ -52,11 +52,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ShowCountContext = React.createContext([]);
+
 const ShowCountProvider = ({children}) => {
     const [showCount, setCount] = useState(0);
 
-    const updateCount = (newValue) => {
-        setCount(newValue);
+    const updateCount = (countValue) => {
+        setCount(countValue);
     }
 
     return (
@@ -66,7 +67,25 @@ const ShowCountProvider = ({children}) => {
     )
 }
 
+const SliderFilterContext = React.createContext([]);
+
+const SliderFilterProvider = ({children}) => {
+    const [showFilter, setFilter] = useState(0);
+
+    const updateSliderFilter = (filterValue) => {
+        setFilter(filterValue);
+    }
+
+    return (
+        <SliderFilterContext.Provider value={[showFilter, updateSliderFilter]}>
+            {children}
+        </SliderFilterContext.Provider>
+    )
+}
+
+
 export default function FilterPanel(props) {
+    console.log('props', props);
     const classes = useStyles();
     const stateCtx = useGlobalState();
     const [state, setState] = useState(
@@ -83,19 +102,20 @@ export default function FilterPanel(props) {
     const columns = [...props.columns.filter(col=>(!col.hide && col.field !== 'daoName'))];
 
     function getRange(arr, field){
-        return getMinMax([...arr].map(item=> parseInt(item[field].toString().replace(/,/g, ''))));
+        return getMinMax([...arr].map(item=> parseInt(item[field])));
     }
 
     function getMinMax(arr){
         return [Math.min.apply(null, arr), Math.max.apply(null, arr)];
     }
 
+/*
     function getStep(range){
         const [min, max] = range;
         const stepSize = Math.pow(10,Math.floor(Math.log10(max-min)))/4;
         return  Math.floor(stepSize);
     }
-
+*/
     function kFormatter(num) {
         return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'K' : Math.sign(num)*Math.abs(num)
     }
@@ -104,9 +124,9 @@ export default function FilterPanel(props) {
         return `${kFormatter(value)}`;
     }
 
-    let tempRows = [...props.rows];
+    let filteredRows = [...props.filteredRows];
+    let tempRows = [...props.filteredRows];
     let filterRange = [];
-
 
     const setDefFilterRanges = () => {
         let range = {};
@@ -119,15 +139,27 @@ export default function FilterPanel(props) {
 
     const FilterSlider = (props)=>{
         const [rangeMin, rangeMax] = [...props.rangeVal];
-        const [sliderVal, setSliderVal] = useState([rangeMin, rangeMax]);
+        const [sliderMin, sliderMax] = [...props.sliderVal];
+        const [sliderVal, setSliderVal] = useState([sliderMin, sliderMax]);
         const [showCount, updateCount] = React.useContext(ShowCountContext);
+        const [showFilter, updateSliderFilter] = React.useContext(SliderFilterContext);
 
         useEffect(()=> {
             updateCount(tempRows.length);
         }, [showCount]);
 
+        useEffect(()=> {
+            updateSliderFilter(sliderVal);
+        }, [showFilter]);
+
+        const handleChangeCommitted = (event, data) => {
+            setSliderVal(data);
+            updateFilter();
+        };
+
         const updateFilter = () => {
             tempRows = props.multipleFilter(rows, filterRange);
+            updateSliderFilter(sliderVal);
             updateCount(tempRows.length);
         }
 
@@ -155,12 +187,13 @@ export default function FilterPanel(props) {
             <>
                 <Box component="div" display="flex">
                     <Slider
-                        value={sliderVal}
+                        key = {props.index}
+                        value={showFilter}
                         onChange={updateSliderRange}
+                        onChangeCommitted={handleChangeCommitted}
                         valueLabelDisplay="auto"
                         min={rangeMin}
                         max={rangeMax}
-                        step={getStep([rangeMin, rangeMax])}
                         aria-labelledby="range-slider"
                         valueLabelFormat={valuetext}
                         getAriaValueText={valuetext}
@@ -170,13 +203,11 @@ export default function FilterPanel(props) {
                     <TextField  InputProps={{
                         inputProps: {
                             min: rangeMin,
-                            max: rangeMax,
-                            step: getStep([rangeMin, rangeMax])} }} id={props.id+"From"} variant="filled" label="From"
+                            max: rangeMax} }} id={props.id+"From"} variant="filled" label="From"
                                 value={sliderVal[0]}  type="number" onChange={updateMinValue}/>
                     <TextField  InputProps={{ inputProps: {
                             min: rangeMin,
-                            max: rangeMax,
-                            step: getStep([rangeMin, rangeMax])} }}  id={props.id+"To"} variant="filled" label="To"
+                            max: rangeMax } }}  id={props.id+"To"} variant="filled" label="To"
                                 value={sliderVal[1]} type="number" onChange={updateMaxValue} />
                 </Box>
             </>
@@ -184,21 +215,24 @@ export default function FilterPanel(props) {
     }
 
     const ColumnsFilter = (props) => {
-        setDefFilterRanges();
+        console.log('props<<<', props);
+        //setDefFilterRanges();
         return (
-            props?.columns ? props.columns.map( (item, index) => (
+            (props?.columns.length>0) ? props.columns.map((item, index) => (
                 <React.Fragment key={item.field}>
-                    <Box className={classes.root} index={index}>
-                        <Box component="div" display="flex" alignItems="baseline" justifyContent="space-between">
-                            <Typography variant="body2"
-                                        component="span"
-                                        color="textSecondary">{item.headerName}</Typography>
-                            <Button color="primary"
-                                    className={classes.clearButton}
-                                    onClick={(e)=>props.clearFilter(item.field)}>Clear</Button>
+                    <SliderFilterProvider>
+                        <Box className={classes.root}>
+                            <Box component="div" display="flex" alignItems="baseline" justifyContent="space-between">
+                                <Typography variant="body2"
+                                            component="span"
+                                            color="textSecondary">{item.headerName}</Typography>
+                                <Button color="primary"
+                                        className={classes.clearButton}
+                                        onClick={(e)=>props.clearFilter(item.field)}>Clear</Button>
+                            </Box>
+                            <FilterSlider {...props} sliderVal={props.sliderVal[item.field]?.length ? props.sliderVal[item.field] :getRange(rows, item.field)} rangeVal={getRange(rows, item.field)} id={item.field} updateRange={props.updateRange} index={index}/>
                         </Box>
-                        <FilterSlider {...props} rangeVal={getRange(rows, item.field)} id={item.field} updateRange={props.updateRange}/>
-                     </Box>
+                    </SliderFilterProvider>
                 </React.Fragment>
             )) : null
        );
@@ -207,12 +241,8 @@ export default function FilterPanel(props) {
     const PanelToolBar = (props) => {
         const [showCount] = React.useContext(ShowCountContext);
 
-        useEffect(()=> {
-//            console.log('effect on count triggered');
-        }, [showCount]);
-
         const clearAll = () => {
-            setDefFilterRanges();
+            //setDefFilterRanges();
         }
 
         return (
@@ -248,13 +278,13 @@ export default function FilterPanel(props) {
                   </IconButton>
               </Box>
               <Divider/>
-              <ColumnsFilter columns={columns}  rangeVal={props.rangeVal} updateRange={props.updateRange} multipleFilter={props.multipleFilter}/>
+              <ColumnsFilter columns={columns}  sliderVal={props.sliderVal} rangeVal={props.rangeVal} updateRange={props.updateRange} multipleFilter={props.multipleFilter}/>
           </>
       );
     }
 
     return (
-        <ShowCountProvider>
+
             <ToolBar>
                 <IconButton {...{
                     "aria-label": "menu",
@@ -269,16 +299,17 @@ export default function FilterPanel(props) {
                         open: state.filterOpen,
                         onClose: handlePanelClose,
                     }}>
-                    <div className={classes.filterPanel}>
-                        <div className={classes.drawerContainer}>
-                            <FilterDialog {...props}/>
+                        <div className={classes.filterPanel}>
+                            <ShowCountProvider>
+                                <div className={classes.drawerContainer}>
+                                    <FilterDialog {...props}/>
+                                </div>
+                                <div className={classes.root}>
+                                    <PanelToolBar {...props} />
+                                </div>
+                            </ShowCountProvider>
                         </div>
-                        <div className={classes.root}>
-                            <PanelToolBar {...props} />
-                        </div>
-                    </div>
                 </Drawer>
             </ToolBar>
-        </ShowCountProvider>
     );
 }
