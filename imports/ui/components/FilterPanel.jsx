@@ -128,16 +128,9 @@ export default function FilterPanel(props) {
     let tempRows = [...props.filteredRows];
     let filterRange = [];
 
-    const setDefFilterRanges = () => {
-        let range = {};
-        for(const col of columns){
-            range[col.field] = [];
-        }
-         filterRange = range;
-    }
-
 
     const FilterSlider = (props)=>{
+        console.log('FilterSlider', props);
         const [rangeMin, rangeMax] = [...props.rangeVal];
         const [sliderMin, sliderMax] = [...props.sliderVal];
         const [sliderVal, setSliderVal] = useState([sliderMin, sliderMax]);
@@ -153,6 +146,8 @@ export default function FilterPanel(props) {
         }, [showFilter]);
 
         const handleChangeCommitted = (event, data) => {
+            console.log('handleChangeCommitted', data);
+            filterRange[props.id] = data;
             setSliderVal(data);
             updateFilter();
         };
@@ -216,6 +211,12 @@ export default function FilterPanel(props) {
 
     const ColumnsFilter = (props) => {
         console.log('props<<<', props);
+
+        useEffect(()=> {
+            filterRange = props.sliderVal;
+        }, []);
+
+
         //setDefFilterRanges();
         return (
             (props?.columns.length>0) ? props.columns.map((item, index) => (

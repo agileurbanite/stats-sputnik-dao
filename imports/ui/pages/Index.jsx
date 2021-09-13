@@ -278,7 +278,7 @@ const Index = () => {
   }
 
   const multipleFilter = (targetArray, filters) => {
-    console.log(targetArray, filters);
+    console.log(filters,'filters');
     let filterKeys = Object.keys(filters);
     return targetArray.filter((eachObj) => {
       return filterKeys.every( (eachKey) => {
