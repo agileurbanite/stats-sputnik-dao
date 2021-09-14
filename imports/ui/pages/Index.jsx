@@ -5,14 +5,17 @@ import Footer from "../components/Footer";
 import {useTracker} from "meteor/react-meteor-data";
 import {useGlobalMutation, useGlobalState} from '../../utils/container'
 import {Decimal} from 'decimal.js';
-import {Card, Box, CardContent, Container, Divider, Grid, makeStyles, Typography, Link, Chip, Button, Toolbar} from "@material-ui/core";
+import {Card, Box, CardContent, Container, Divider, Grid, makeStyles, Typography, Link, Chip, Button, TextField} from "@material-ui/core";
 import {DataGrid, GridToolbarContainer, GridToolbarExport,} from '@material-ui/data-grid';
 
 
 import {blue} from '@material-ui/core/colors';
 import CssBaseline from "@material-ui/core/CssBaseline";
 import {DaoData, NearPrice, TxActions} from "../../api/data";
-
+import IconButton from "@material-ui/core/IconButton";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import SearchIcon from "@material-ui/icons/Search";
+import Icon from '@material-ui/core/Icon';
 
 const yoctoNEAR = 1000000000000000000000000;
 
@@ -151,12 +154,6 @@ const Index = () => {
   }));
   const classes = useStyles();
 
-  const handleSearchClick = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
-  };
-
 
   const handleDaoClick = (value) => {
     window.open("https://sputnik.fund/#/" + value, '_blank').focus();
@@ -259,15 +256,16 @@ const Index = () => {
 
   const [filteredRows, setFilteredRows] = React.useState([]);
   const [filterRanges, setFilterRange] = React.useState({});
+  const [searchTerm, setSearchTerm] = React.useState("");
 
 
-  const setDefFilterRanges = () => {
-    let range = {};
-    for(const col of columns){
-      range[col.field] = [];
-    }
-    setFilterRange(range)
-  }
+  React.useEffect(() => {
+    const results = [...rows].filter(row =>
+        row.daoName.toLowerCase().includes(searchTerm)
+    );
+    setFilteredRows(results);
+  }, [searchTerm]);
+
 
   const getDefFilterRanges = () => {
     let range = {};
@@ -277,8 +275,12 @@ const Index = () => {
     return range;
   }
 
+  const getFilterRanges = () => {
+    return filterRanges ? Object.fromEntries(
+        Object.entries(filterRanges).filter(([key, value]) => value.length > 0)) : {};
+  }
+
   const multipleFilter = (targetArray, filters) => {
-    console.log(filters,'filters');
     let filterKeys = Object.keys(filters);
     return targetArray.filter((eachObj) => {
       return filterKeys.every( (eachKey) => {
@@ -296,10 +298,6 @@ const Index = () => {
   }
 
 
-  const getRanges = () =>{
-
-  }
-
   const clearFilter = (event, id) => {
     const ranges = filterRanges;
     ranges[id] = [];
@@ -307,8 +305,20 @@ const Index = () => {
     applyFilters(filterRanges);
   }
 
-  function clearAllFilter(){
+  const clearAllFilter = (event) =>{
+    const ranges = getDefFilterRanges();
+    setFilterRange(ranges);
+    applyFilters(ranges);
+  }
 
+  const applyFilters = (filters) => {
+    setFilterRange(filters);
+    setFilteredRows(multipleFilter(rows, filters));
+  }
+
+
+  const getFilteredRows = () => {
+    return filteredRows.length>0 ? filteredRows: [...rows];
   }
 
 
@@ -333,19 +343,11 @@ const Index = () => {
 
   };
 
-  const applyFilters = (filters) => {
-    setFilterRange(filters);
-    setFilteredRows(multipleFilter(rows, filters));
-  }
+  const handleSearchChange = (e) => {
+    e.preventDefault();
+    setSearchTerm(e.target.value);
+  };
 
-  const getFilterRanges = () => {
-    return filterRanges ? Object.fromEntries(
-        Object.entries(filterRanges).filter(([key, value]) => value.length > 0)) : {};
-  }
-
-  const getFilteredRows = () => {
-    return filteredRows.length>0 ? filteredRows: [...rows];
-  }
 
   const GridFilterBtn = (props) => {
     return (
@@ -372,12 +374,14 @@ const Index = () => {
       <div className={classes.root}>
         <CssBaseline/>
         <Navbar
-            updateRange={updateRange}
+            components={{
+              Toolbar: ExportToolbar,
+            }}
             clearFilter={clearFilter}
-            handleSearchClick={handleSearchClick}
             multipleFilter={multipleFilter}
             hideColumn={hideColumn}
             applyFilters={applyFilters}
+            clearAllFilter={clearAllFilter}
             columns={stateColumns}
             rangeVal = {getDefFilterRanges()}
             sliderVal = {getSliderRangeVal()}
@@ -500,13 +504,36 @@ const Index = () => {
             </Grid>
             */}
           </Grid>
+          <Grid container
+                spacing={1}
+                justifyContent="center"
+                className={classes.container}>
+            <Grid item lg={12} align="center">
+                <TextField  fullWidth
+                            value={searchTerm}
+                            type="search"
+                            variant="outlined"
+                            placeholder="Search name or address"
+                            onChange={handleSearchChange}
+                            InputProps={{
+                              startAdornment: (
+                                  <InputAdornment position="start">
+                                    <IconButton>
+                                      <SearchIcon />
+                                    </IconButton>
+                                  </InputAdornment>
+                              )
+                            }}
+                />
+            </Grid>
+          </Grid>
           <Grid container spacing={3}>
             <Grid item item xs={12} md={12}>
               <Box display="flex" justifyContent="flex-start">
                 {
                   Object.keys(getFilterRanges()).length ?
                         <Grid container alignItems="center" className={classes.gridFilterPanel}>
-                          <Button color="primary" className={classes.clearButton}>X Clear All</Button>
+                          <Button color="primary" className={classes.clearButton} onClick={(e)=>clearAllFilter(e)}>X Clear All</Button>
                           <Divider orientation="vertical" flexItem />
                           <GridFilterBtn filterRanges={getFilterRanges()} />
                         </Grid>

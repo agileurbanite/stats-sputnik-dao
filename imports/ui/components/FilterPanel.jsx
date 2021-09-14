@@ -9,7 +9,7 @@ import ToolBar from '@material-ui/core/ToolBar';
 const useStyles = makeStyles((theme) => ({
     root: {
         margin: 0,
-        padding: theme.spacing(2),
+        padding: theme.spacing(3),
         '& .MuiTextField-root': {
             margin: theme.spacing(1),
             width: 125,
@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
     },
     dialogTitle: {
         margin: 0,
-        padding: theme.spacing(1),
+        padding: theme.spacing(2),
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -85,7 +85,6 @@ const SliderFilterProvider = ({children}) => {
 
 
 export default function FilterPanel(props) {
-    console.log('props', props);
     const classes = useStyles();
     const stateCtx = useGlobalState();
     const [state, setState] = useState(
@@ -124,13 +123,11 @@ export default function FilterPanel(props) {
         return `${kFormatter(value)}`;
     }
 
-    let filteredRows = [...props.filteredRows];
     let tempRows = [...props.filteredRows];
     let filterRange = [];
 
 
     const FilterSlider = (props)=>{
-        console.log('FilterSlider', props);
         const [rangeMin, rangeMax] = [...props.rangeVal];
         const [sliderMin, sliderMax] = [...props.sliderVal];
         const [sliderVal, setSliderVal] = useState([sliderMin, sliderMax]);
@@ -146,7 +143,6 @@ export default function FilterPanel(props) {
         }, [showFilter]);
 
         const handleChangeCommitted = (event, data) => {
-            console.log('handleChangeCommitted', data);
             filterRange[props.id] = data;
             setSliderVal(data);
             updateFilter();
@@ -210,14 +206,12 @@ export default function FilterPanel(props) {
     }
 
     const ColumnsFilter = (props) => {
-        console.log('props<<<', props);
 
         useEffect(()=> {
             filterRange = props.sliderVal;
         }, []);
 
 
-        //setDefFilterRanges();
         return (
             (props?.columns.length>0) ? props.columns.map((item, index) => (
                 <React.Fragment key={item.field}>
@@ -229,10 +223,14 @@ export default function FilterPanel(props) {
                                             color="textSecondary">{item.headerName}</Typography>
                                 <Button color="primary"
                                         className={classes.clearButton}
-                                        onClick={(e)=>props.clearFilter(item.field)}>Clear</Button>
+                                        onClick={(e)=>props.clearFilter(e, item.field)}>Clear</Button>
                             </Box>
-                            <FilterSlider {...props} sliderVal={props.sliderVal[item.field]?.length ? props.sliderVal[item.field] :getRange(rows, item.field)} rangeVal={getRange(rows, item.field)} id={item.field} updateRange={props.updateRange} index={index}/>
+                            <FilterSlider {...props}
+                                          sliderVal={props.sliderVal[item.field]?.length ? props.sliderVal[item.field] :getRange(rows, item.field)}
+                                          rangeVal={getRange(rows, item.field)} id={item.field}
+                                          updateRange={props.updateRange} />
                         </Box>
+                        <Divider />
                     </SliderFilterProvider>
                 </React.Fragment>
             )) : null
@@ -242,24 +240,16 @@ export default function FilterPanel(props) {
     const PanelToolBar = (props) => {
         const [showCount] = React.useContext(ShowCountContext);
 
-        const clearAll = () => {
-            //setDefFilterRanges();
-        }
-
         return (
             <>
                 <Box sx={{
                     display: "flex",
-                    justifyContent:"center",
-                    position: "absolute",
-                    bottom: "0",
-                    left: "50%",
-                    transform: "translate(-50%, 0)"}}
+                    justifyContent:"space-between"}}
                 >
-                    <Button className={classes.clearButton} sx={{m:1}} onChange={(event) => {
-                        clearAll();
+                    <Button color="primary" className={classes.clearButton} sx={{m:1}} onClick={(event) => {
+                        props.clearAllFilter();
                     }}>Clear All</Button>
-                    <Button variant="outlined" sx={{m:1}} onClick={(event) => {
+                    <Button variant="contained" color="primary" sx={{m:1}} onClick={(event) => {
                         props.applyFilters(filterRange);
                     }}>{`Show ${showCount} items`}</Button>
                 </Box>
@@ -279,7 +269,7 @@ export default function FilterPanel(props) {
                   </IconButton>
               </Box>
               <Divider/>
-              <ColumnsFilter columns={columns}  sliderVal={props.sliderVal} rangeVal={props.rangeVal} updateRange={props.updateRange} multipleFilter={props.multipleFilter}/>
+              <ColumnsFilter columns={columns} clearFilter={props.clearFilter} sliderVal={props.sliderVal} rangeVal={props.rangeVal} updateRange={props.updateRange} multipleFilter={props.multipleFilter}/>
           </>
       );
     }

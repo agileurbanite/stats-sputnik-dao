@@ -238,7 +238,6 @@ export default function Navbar(props) {
         >
           <MenuIcon/>
         </IconButton>
-
         <Drawer
           {...{
             anchor: "left",
@@ -256,6 +255,9 @@ export default function Navbar(props) {
         </Drawer>
         {getMenuButtons(true)}
         {searchBox}
+        <Divider className={classes.divider} orientation="vertical" flexItem />
+        <FilterPanel {...props}/>
+        <ColumnSettings {...props}/>
       </Toolbar>
     );
   };
