@@ -227,8 +227,7 @@ export default function FilterPanel(props) {
                             </Box>
                             <FilterSlider {...props}
                                           sliderVal={props.sliderVal[item.field]?.length ? props.sliderVal[item.field] :getRange(rows, item.field)}
-                                          rangeVal={getRange(rows, item.field)} id={item.field}
-                                          updateRange={props.updateRange} />
+                                          rangeVal={getRange(rows, item.field)} id={item.field}/>
                         </Box>
                         <Divider />
                     </SliderFilterProvider>
@@ -269,7 +268,7 @@ export default function FilterPanel(props) {
                   </IconButton>
               </Box>
               <Divider/>
-              <ColumnsFilter columns={columns} clearFilter={props.clearFilter} sliderVal={props.sliderVal} rangeVal={props.rangeVal} updateRange={props.updateRange} multipleFilter={props.multipleFilter}/>
+              <ColumnsFilter columns={columns} clearFilter={props.clearFilter} sliderVal={props.sliderVal} rangeVal={props.rangeVal} multipleFilter={props.multipleFilter}/>
           </>
       );
     }

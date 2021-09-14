@@ -81,6 +81,11 @@ const Index = () => {
   const {nearPrice, isLoadingNearPrice} = useNearPrice();
   const {allDeposits, isLoadingAllDeposits} = useAllDeposits();
   const {txActions, isLoadingTxActions} = useTxActions();
+  const [state, setState] = useState(
+      {
+        mobileView: false
+      });
+
 
   const useStyles = makeStyles((theme) => ({
     root: {
@@ -93,7 +98,6 @@ const Index = () => {
       '& .MuiChip-root': {
         borderRadius: 8,
       },
-
     },
     main: {
       marginTop: theme.spacing(12),
@@ -151,9 +155,26 @@ const Index = () => {
         margin: theme.spacing(0, 0.5),
       },
     },
+    filterButton: {
+      marginLeft: theme.spacing(1),
+      marginRight: theme.spacing(1),
+    }
   }));
   const classes = useStyles();
 
+  const {mobileView} = state;
+
+  useEffect(() => {
+    const setResponsiveness = () => {
+      return window.innerWidth < 900
+          ? setState((prevState) => ({...prevState, mobileView: true}))
+          : setState((prevState) => ({...prevState, mobileView: false}));
+    };
+
+    setResponsiveness();
+
+    window.addEventListener("resize", () => setResponsiveness());
+  }, []);
 
   const handleDaoClick = (value) => {
     window.open("https://sputnik.fund/#/" + value, '_blank').focus();
@@ -266,6 +287,9 @@ const Index = () => {
     setFilteredRows(results);
   }, [searchTerm]);
 
+  const getSearchTerm = () =>{
+    return searchTerm;
+  }
 
   const getDefFilterRanges = () => {
     let range = {};
@@ -339,12 +363,9 @@ const Index = () => {
     allAccounts.push(item.signer_account_id)
   });
 
-  const updateRange = (e, data) => {
-
-  };
-
   const handleSearchChange = (e) => {
     e.preventDefault();
+    console.log('e.target.value', e.target.value)
     setSearchTerm(e.target.value);
   };
 
@@ -355,9 +376,9 @@ const Index = () => {
           {
             props.filterRanges ? Object.keys(props.filterRanges).map((filter,index) =>(
                 <React.Fragment key={filter}>
-                  <Box>
+                  <Box pl={1}>
                     <Typography component="span" color="textSecondary" variant="body2">{columns.find(column=>column.field===filter).headerName}:</Typography>
-                    <Chip
+                    <Chip className={classes.filterButton}
                         label={filterRanges[filter][0]+"-"+filterRanges[filter][1]}
                         onDelete={(e)=>clearFilter(e, filter)}
                     />
@@ -374,10 +395,10 @@ const Index = () => {
       <div className={classes.root}>
         <CssBaseline/>
         <Navbar
-            components={{
-              Toolbar: ExportToolbar,
-            }}
             clearFilter={clearFilter}
+            handleSearchChange={handleSearchChange}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
             multipleFilter={multipleFilter}
             hideColumn={hideColumn}
             applyFilters={applyFilters}
@@ -409,78 +430,73 @@ const Index = () => {
 
           <Grid container
                 spacing={1}
-                justifyContent="space-between"
+                style={
+                  {justifyContent: mobileView ? 'center' : 'space-between'}
+                }
                 className={classes.container}
           >
-            <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
                   <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {!isLoadingDaoData ? daoData.length : null}
                   </Typography>
-                  <Typography className={classes.title} color="textSecondary" gutterBottom>
+                  <Typography className={classes.title} gutterBottom>
                     Number of DAOs
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+             <Grid item xs={6} sm={4} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
                   </Typography>
-                  <Typography className={classes.pos} color="textSecondary">
+                  <Typography className={classes.pos}>
                     TVL (NEAR)
                   </Typography>
-                  <Typography variant="h5" component="h5" color="textSecondary">
+                  <Typography variant="body2" component="span" color="textSecondary">
                     {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
                   <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {countUnique(allAccounts)}
                   </Typography>
-                  <Typography className={classes.title} color="textSecondary" gutterBottom>
+                  <Typography className={classes.title} gutterBottom>
                     Number of account interactions
                   </Typography>
-                  <Typography variant="h5" component="h5" color="textSecondary">
-
-                  </Typography>
                 </CardContent>
               </Card>
             </Grid>
-              <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {txActions.length}
                   </Typography>
-                  <Typography className={classes.pos} color="textSecondary">
+                  <Typography className={classes.pos}>
                     Total transactions
-                  </Typography>
-
-                  <Typography variant="h5" component="h5" color="textSecondary">
-
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={6} lg={2} align="center">
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3">
+                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
                   </Typography>
-                  <Typography className={classes.title} color="textSecondary" gutterBottom>
+                  <Typography className={classes.title} gutterBottom>
                     Total Payout
                   </Typography>
-                  <Typography variant="h5" component="h5" color="textSecondary" gutterBottom>
+                  <Typography variant="body2" component="span" color="textSecondary" gutterBottom>
                     {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
                   </Typography>
                 </CardContent>
@@ -504,29 +520,31 @@ const Index = () => {
             </Grid>
             */}
           </Grid>
-          <Grid container
-                spacing={1}
-                justifyContent="center"
-                className={classes.container}>
-            <Grid item lg={12} align="center">
-                <TextField  fullWidth
-                            value={searchTerm}
-                            type="search"
-                            variant="outlined"
-                            placeholder="Search name or address"
-                            onChange={handleSearchChange}
-                            InputProps={{
-                              startAdornment: (
-                                  <InputAdornment position="start">
-                                    <IconButton>
-                                      <SearchIcon />
-                                    </IconButton>
-                                  </InputAdornment>
-                              )
-                            }}
-                />
-            </Grid>
-          </Grid>
+          { !mobileView ?
+                <Grid container
+                      spacing={1}
+                      justifyContent="center"
+                      className={classes.container}>
+                  <Grid item lg={12} align="center">
+                    <TextField  fullWidth
+                                value={searchTerm}
+                                type="search"
+                                variant="outlined"
+                                placeholder="Search name or address"
+                                onChange={handleSearchChange}
+                                InputProps={{
+                                  startAdornment: (
+                                      <InputAdornment position="start">
+                                        <IconButton>
+                                          <SearchIcon />
+                                        </IconButton>
+                                      </InputAdornment>
+                                  )
+                                }}
+                    />
+                  </Grid>
+                </Grid>
+              : null}
           <Grid container spacing={3}>
             <Grid item item xs={12} md={12}>
               <Box display="flex" justifyContent="flex-start">

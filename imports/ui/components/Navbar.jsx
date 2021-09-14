@@ -72,6 +72,8 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     flexGrow: 1,
+    paddingLeft: theme.spacing(1),
+    fontWeight: [700],
   },
   search: {
     position: 'relative',
@@ -122,7 +124,6 @@ export default function Navbar(props) {
   const classes = useStyles();
   const stateCtx = useGlobalState();
   const mutationCtx = useGlobalMutation();
-  const [search, setSearch] = useState(null);
 
   const [state, setState] = useState(
       {
@@ -136,19 +137,6 @@ export default function Navbar(props) {
     setState({...state, darkMode: !state.darkMode});
   };
 
-  /*
-  const handleSearchClick = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      console.log(search);
-    }
-  };
-  */
-
-  const handleSearchChange = (e) => {
-    e.preventDefault();
-    setSearch(e.target.value);
-  };
 
   useEffect(() => {
     mutationCtx.updateConfig({
@@ -173,23 +161,25 @@ export default function Navbar(props) {
   }, []);
 
 
-  const searchBox = (
-    <div className={classes.search}>
-      <div className={classes.searchIcon}>
-        <SearchIcon/>
-      </div>
-      <InputBase
-        onKeyDown={props.handleSearchClick}
-        onChange={handleSearchChange}
-        value={search}
-        placeholder="Search for…"
-        classes={{
-          root: classes.inputRoot,
-          input: classes.inputInput,
-        }}
-        inputProps={{'aria-label': 'search'}}
-      />
-    </div>
+  const SearchBox = (
+        <div className={classes.search}>
+          <div className={classes.searchIcon}>
+            <SearchIcon/>
+          </div>
+          <InputBase
+              onChange={(e)=> {
+                props.setSearchTerm(e.target.value)
+              }}
+              key="appBar-search-input"
+              value={props.searchTerm}
+              placeholder="Search for…"
+              classes={{
+                root: classes.inputRoot,
+                input: classes.inputInput,
+              }}
+              inputProps={{'aria-label': 'search'}}
+          />
+        </div>
   );
 
   const DarkSwitchBtn = (
@@ -254,7 +244,7 @@ export default function Navbar(props) {
           </div>
         </Drawer>
         {getMenuButtons(true)}
-        {searchBox}
+        {SearchBox}
         <Divider className={classes.divider} orientation="vertical" flexItem />
         <FilterPanel {...props}/>
         <ColumnSettings {...props}/>
