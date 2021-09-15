@@ -42,11 +42,12 @@ const useStyles = makeStyles((theme) => ({
   },
   appBar: {
     boxShadow: "none",
-    borderBottom: "1px solid #e0e0e0",
+    borderBottom: theme.palette.type==='light' ? '1px solid rgba(0, 0, 0, 0.12)':'1px solid rgba(255, 255, 255, 0.12)',
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
+    backgroundColor: theme.palette.background.default,
   },
   logo: {
     fontFamily: "Work Sans, sans-serif",
@@ -133,7 +134,6 @@ export default function Navbar(props) {
   });
 
   const handleDarkModeToggle = () => {
-    //console.log(!state.darkMode);
     setState({...state, darkMode: !state.darkMode});
   };
 
@@ -255,7 +255,7 @@ export default function Navbar(props) {
 
   const appLogo = (
     <>
-      <Typography variant="h6" component="h1" className={classes.title}>
+      <Typography variant="h5" component="h1" className={classes.title}>
         Sputnik DAO v1 Stats
       </Typography>
     </>
@@ -271,16 +271,10 @@ export default function Navbar(props) {
     />
   );
 
-  const exportDialog =() => {
-    return (
-        <>
-        </>
-    );
-  };
 
   const nearLogo = (
     <img style={state.darkMode ? {filter: "brightness(0) invert(1)"} : null}
-         height="30"
+         height="56"
          src="https://gov.near.org/uploads/default/original/1X/7aa6fc28cbccdc2242717e8fe4c756829d90aaec.png"/>
   );
 

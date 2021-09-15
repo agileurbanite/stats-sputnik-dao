@@ -41,20 +41,6 @@ export default function ColumnSettings(props) {
         setAnchorEl(null);
     };
 
-    const _DialogTitle = React.forwardRef((props, ref) => {
-        const { children, onClose, ...other } = props;
-        console.log('ref', ref);
-        return (
-            <Box className={classes.dialogTitle} {...other} ref={ref}>
-                <Typography style={{ fontWeight: 600 }} variant="h6" component="h6">{children}</Typography>
-                {onClose ? (
-                    <IconButton aria-label="close" className={classes.closeButton} onClick={onClose}>
-                        <CloseIcon />
-                    </IconButton>
-                ) : null}
-            </Box>
-        );
-    });
 
     const StyledMenu = withStyles({
         paper: {
@@ -118,8 +104,7 @@ export default function ColumnSettings(props) {
     };
 
     return (
-        <div className={classes.root}>
-            <div>
+            <>
                 <IconButton
                     aria-controls="customized-menu"
                     aria-haspopup="true"
@@ -142,7 +127,6 @@ export default function ColumnSettings(props) {
                     <Divider/>
                     <ColumnItems columns={props.columns}/>
                 </StyledMenu>
-            </div>
-        </div>
+            </>
     );
 }

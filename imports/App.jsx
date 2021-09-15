@@ -12,6 +12,7 @@ function App() {
   const stateCtx = useGlobalState();
   const mutationCtx = useGlobalMutation();
 
+    console.log(stateCtx.config.darkMode);
 
   let theme = React.useMemo(
     () =>
@@ -21,6 +22,9 @@ function App() {
           primary: {
              main: blue['A700'],
           },
+          background: {
+              default: stateCtx.config.darkMode==='light' ? '#eef2f6':'#161a20',
+          }
         },
       }),
     [stateCtx.config.darkMode],

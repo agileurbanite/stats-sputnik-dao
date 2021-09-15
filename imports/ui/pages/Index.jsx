@@ -109,6 +109,20 @@ const Index = () => {
     input: {
       width: '100%',
     },
+    searchInput:{
+      '& input::placeholder': {
+        fontWeight: [500],
+        color: theme.palette.type==='light' ?  'rgba(0, 0, 0, 0.85)': 'rgba(255, 255, 255, 0.5)',
+      },
+      '& .MuiIconButton-label': {
+        color: theme.palette.type==='light' ?  'rgba(0, 0, 0, 0.65)': 'rgba(255, 255, 255, 0.5)',
+      },
+      '& .MuiOutlinedInput-notchedOutline': {
+        border: 0,
+      },
+      borderRadius: theme.spacing(2),
+      backgroundColor: theme.palette.type==='light' ? '#dfe0e4':'#262a34',
+    },
     buttonProgress: {
       color: blue[500],
       position: 'absolute',
@@ -136,6 +150,12 @@ const Index = () => {
       borderRadius: 15,
       minHeight: 160,
     },
+    gradient1:{
+      background: 'linear-gradient(135deg, rgb(124, 193, 208) 18%, rgb(224, 162, 234));',
+    },
+    gradient2:{
+      background: 'linear-gradient(135deg, rgb(197, 214, 185) 30%, rgb(230, 207, 245));',
+    },
     daoCardHeader:{
       fontWeight: [700]
     },
@@ -148,6 +168,26 @@ const Index = () => {
     clearButton: {
       textTransform: "none",
       fontWeight: "bold",
+    },
+    dataGrid: {
+      border: 0,
+      borderRadius: 15,
+      backgroundColor: stateCtx.config.darkMode ==='light' ? '#fafafa': '#262a34',
+      '& .MuiDataGrid-columnHeaderTitle':{
+        fontWeight: [700]
+      },
+      '& .MuiDataGrid-columnSeparator': {
+        visibility: 'hidden',
+      },
+      '& .MuiDataGrid-footerContainer': {
+        justifyContent: 'center',
+      },
+      '& .MuiDataGrid-cell': {
+        padding: '0 16px',
+      },
+    },
+    toolbarExport: {
+
     },
     gridFilterPanel: {
       width: 'fit-content',
@@ -349,7 +389,7 @@ const Index = () => {
   function ExportToolbar() {
     return (
       <GridToolbarContainer>
-        <GridToolbarExport/>
+        <GridToolbarExport className={classes.toolbarExport}/>
       </GridToolbarContainer>
     );
   }
@@ -436,7 +476,7 @@ const Index = () => {
                 className={classes.container}
           >
             <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.daoCard}>
+              <Card className={classes.gradient1+ ' ' + classes.daoCard}>
                 <CardContent>
                   <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {!isLoadingDaoData ? daoData.length : null}
@@ -448,7 +488,7 @@ const Index = () => {
               </Card>
             </Grid>
              <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.daoCard}>
+              <Card className={classes.gradient2+ ' ' + classes.daoCard}>
                 <CardContent>
                   <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
                     {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
@@ -527,6 +567,7 @@ const Index = () => {
                       className={classes.container}>
                   <Grid item lg={12} align="center">
                     <TextField  fullWidth
+                                className={classes.searchInput}
                                 value={searchTerm}
                                 type="search"
                                 variant="outlined"
@@ -563,11 +604,14 @@ const Index = () => {
             <Grid item xs={12} md={12}>
               {!isLoadingDaoData && !isLoadingNearPrice ?
                 <div>
-                  <DataGrid
+                  <DataGrid className={classes.dataGrid}
                             rows={getFilteredRows()}
                             autoHeight={true}
                             columns={stateColumns}
                             pageSize={100}
+                            disableColumnFilter
+                            disableColumnSelector
+                            disableColumnMenu
                             components={{
                               Toolbar: ExportToolbar,
                             }}/>

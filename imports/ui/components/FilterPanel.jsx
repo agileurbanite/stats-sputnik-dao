@@ -4,7 +4,6 @@ import {Box, Button, Divider, Drawer, IconButton, Slider, TextField, Typography}
 import FilterListIcon from "@material-ui/icons/FilterList";
 import CloseIcon from "@material-ui/icons/Close";
 import {makeStyles} from "@material-ui/core/styles";
-import ToolBar from '@material-ui/core/ToolBar';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -22,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
     },
     dialogTitle: {
         margin: 0,
-        padding: theme.spacing(2),
+        padding: theme.spacing(1),
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -40,6 +39,7 @@ const useStyles = makeStyles((theme) => ({
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
+        backgroundColor: theme.palette.type ==='light' ? '#fff': '#000',
     },
     panelToolbar: {
         position: "fixed",
@@ -274,8 +274,7 @@ export default function FilterPanel(props) {
     }
 
     return (
-
-            <ToolBar>
+            <>
                 <IconButton {...{
                     "aria-label": "menu",
                     "aria-haspopup": "true",
@@ -300,6 +299,6 @@ export default function FilterPanel(props) {
                             </ShowCountProvider>
                         </div>
                 </Drawer>
-            </ToolBar>
+            </>
     );
 }
