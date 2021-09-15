@@ -150,8 +150,6 @@ const Index = () => {
       color: 'rgba(0, 0, 0, 0.67)',
     },
     gridItem: {
-      maxWidth: '20%',
-      flexBasis: '19%',
       position: "relative",
     },
     cardWrapper: {
