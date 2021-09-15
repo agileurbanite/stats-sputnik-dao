@@ -142,22 +142,67 @@ const Index = () => {
     },
     title: {
       fontSize: 14,
+      fontWeight: [600],
+      color: 'rgba(0, 0, 0, 0.87)',
     },
     pos: {
       marginBottom: 0,
+      color: 'rgba(0, 0, 0, 0.67)',
+    },
+    gridItem: {
+      maxWidth: '20%',
+      flexBasis: '19%',
+      position: "relative",
+    },
+    cardWrapper: {
+      position: 'relative',
+      height: '100%',
+      width: '100%',
+    },
+    cardOuter:{
+      width: "calc(100% - 20px)",
+      height: "calc(100% - 10px)",
+      padding: "8px 10px",
+      borderRadius: theme.spacing(2),
+    },
+    cardInner:{
+      position: "relative",
+      display: "inline-block",
+      bottom: "calc(100% - 10px)",
+      width: "100%",
+      padding: "10px 10px",
     },
     daoCard: {
       borderRadius: 15,
       minHeight: 160,
+      '& .MuiTypography-h3':{
+        fontFamily: 'Roboto',
+      },
+      '& .MuiCardContent-root:last-child':{
+        paddingBottom: '0px',
+      },
+      '& .MuiPaper-root':{
+        color: "rgba(0, 0, 0, 0.87)",
+      }
     },
     gradient1:{
-      background: 'linear-gradient(135deg, rgb(124, 193, 208) 18%, rgb(224, 162, 234));',
+      background: 'linear-gradient(135deg, rgb(121, 191, 208) 20%, rgb(225, 162, 234))',
     },
     gradient2:{
-      background: 'linear-gradient(135deg, rgb(197, 214, 185) 30%, rgb(230, 207, 245));',
+      background: 'linear-gradient(135deg, rgb(218, 250, 238) 20%, rgb(242, 218, 255))',
+    },
+    gradient3:{
+      background: 'linear-gradient(135deg, rgb(243, 234, 205) 20%, rgb(125, 212, 235))',
+    },
+    gradient4:{
+      background: 'linear-gradient(135deg, rgb(250, 117, 180) 30%, rgb(243, 183, 246))',
+    },
+    gradient5:{
+      background: 'linear-gradient(135deg, rgb(121, 192, 96) 35%, rgb(184, 222, 171))',
     },
     daoCardHeader:{
-      fontWeight: [700]
+      fontWeight: [700],
+      color: 'rgba(0, 0, 0, 0.87)',
     },
     table: {
       minWidth: 650,
@@ -475,72 +520,96 @@ const Index = () => {
                 }
                 className={classes.container}
           >
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.gradient1+ ' ' + classes.daoCard}>
-                <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                    {!isLoadingDaoData ? daoData.length : null}
-                  </Typography>
-                  <Typography className={classes.title} gutterBottom>
-                    Number of DAOs
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-             <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.gradient2+ ' ' + classes.daoCard}>
-                <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                    {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                  </Typography>
-                  <Typography className={classes.pos}>
-                    TVL (NEAR)
-                  </Typography>
-                  <Typography variant="body2" component="span" color="textSecondary">
-                    {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.daoCard}>
-                <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                    {countUnique(allAccounts)}
-                  </Typography>
-                  <Typography className={classes.title} gutterBottom>
-                    Number of account interactions
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-              <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.daoCard}>
-                <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                    {txActions.length}
-                  </Typography>
-                  <Typography className={classes.pos}>
-                    Total transactions
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+              <Box className={classes.cardWrapper}>
+                <Box className={classes.gradient1+ ' '+classes.cardOuter}>
 
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center">
-              <Card className={classes.daoCard}>
-                <CardContent>
-                  <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                    {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                  </Typography>
-                  <Typography className={classes.title} gutterBottom>
-                    Total Payout
-                  </Typography>
-                  <Typography variant="body2" component="span" color="textSecondary" gutterBottom>
-                    {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                  </Typography>
-                </CardContent>
-              </Card>
+                </Box>
+                <Card className={classes.gradient1+ ' ' + classes.daoCard + ' ' + classes.cardInner}>
+                  <CardContent>
+                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                      {!isLoadingDaoData ? daoData.length : null}
+                    </Typography>
+                    <Typography className={classes.title} gutterBottom>
+                      Number of DAOs
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
+            </Grid>
+             <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+               <Box className={classes.cardWrapper}>
+                 <Box className={classes.gradient2+ ' '+classes.cardOuter}>
+
+                 </Box>
+                 <Card className={classes.gradient2+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                   <CardContent>
+                     <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                       {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                     </Typography>
+                     <Typography className={classes.title}>
+                       TVL (NEAR)
+                     </Typography>
+                     <Typography className={classes.pos} variant="body2" component="span">
+                       {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                     </Typography>
+                   </CardContent>
+                 </Card>
+               </Box>
+            </Grid>
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+              <Box className={classes.cardWrapper}>
+                <Box className={classes.gradient3+ ' '+classes.cardOuter}>
+
+                </Box>
+                <Card className={classes.gradient3+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                  <CardContent>
+                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                      {countUnique(allAccounts)}
+                    </Typography>
+                    <Typography className={classes.title} gutterBottom>
+                      Number of account interactions
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
+            </Grid>
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+                <Box className={classes.cardWrapper}>
+                  <Box className={classes.gradient4+ ' '+classes.cardOuter}>
+
+                  </Box>
+                  <Card className={classes.gradient4+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                    <CardContent>
+                      <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                        {txActions.length}
+                      </Typography>
+                      <Typography className={classes.title}>
+                        Total transactions
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
+            </Grid>
+            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+              <Box className={classes.cardWrapper}>
+                <Box className={classes.gradient5+ ' '+classes.cardOuter}>
+
+                </Box>
+                <Card className={classes.gradient5+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                  <CardContent>
+                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                      {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                    </Typography>
+                    <Typography className={classes.title} gutterBottom>
+                      Total Payout
+                    </Typography>
+                    <Typography className={classes.pos} variant="body2" component="span" gutterBottom>
+                      {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
             </Grid>
             {/*}
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
