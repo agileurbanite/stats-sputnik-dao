@@ -39,19 +39,11 @@ async function queryPg(block_timestamp) {
   return res.rows;
 }
 
-/*
-queryPg(1598366209232845339).then((r) => {
-  //console.log(r);
-}).catch((e) => {
-  console.log(e);
-})
 */
-
 
 const autobahn = require("autobahn");
 
 import {TxActions} from "../imports/api/data";
-
 
 let session = null;
 const connection = new autobahn.Connection({
@@ -65,20 +57,13 @@ const connection = new autobahn.Connection({
 connection.onopen = async (s, details) => {
   session = s;
   session.log();
+  console.log("started indexer update");
   await storeTransactions().then(
-      () => connection.close()
+    () => {
+      connection.close()
+      console.log("finished indexer update");
+    }
   );
-//  console.log(session);
-
-  /*
-    storeTransactions().then((r) => {
-      console.log('done');
-    }).catch((e) => {
-      console.log(e);
-    })
-  */
-
-
 };
 
 connection.onclose = (reason, details) => {
@@ -87,6 +72,12 @@ connection.onclose = (reason, details) => {
   console.log(reason);
   session = null;
 };
+
+
+connectAndStoreTransactions().then((r) => {
+}).catch((e) => {
+  console.log(e);
+})
 
 
 async function query(q) {
@@ -105,10 +96,9 @@ async function queryNearCoreTx(q) {
 }
 
 
-
 async function getTransactions(block_timestamp) {
   return await queryPostgres([
-      `SELECT *
+    `SELECT *
      FROM transactions t,
           receipts r,
           blocks b,
@@ -128,14 +118,14 @@ async function getTransactions(block_timestamp) {
      ORDER BY t.block_timestamp ASC
      LIMIT :limit
     `, {
-      limit: 300,
+      limit: 50,
       block_timestamp: block_timestamp
     }
   ]).then((data) => {
-        //console.log(data)
-        console.log(data.length);
-        return data;
-      }
+      //console.log(data)
+      console.log(data.length);
+      return data;
+    }
   ).catch((e) => {
     console.log(e);
   });
@@ -146,7 +136,7 @@ if (Meteor.isServer) {
   SyncedCron.add({
     name: 'Fetch Transactions',
     schedule: function (parser) {
-      return parser.text('every 1 minutes');
+      return parser.text('every 5 minutes');
     },
     job: async function () {
       await connectAndStoreTransactions();
@@ -154,7 +144,7 @@ if (Meteor.isServer) {
   });
 }
 
-async function connectAndStoreTransactions(){
+async function connectAndStoreTransactions() {
   if (!connection.isOpen) {
     connection.open();
   }
@@ -167,7 +157,7 @@ async function storeTransactions() {
   /* To received the data from Epoch2, uncomment below */
   //let blockTimestamp = 1598366209232845339;
   /* -------------------------------------------------- */
-  let len = 300;
+  let len = 50;
   let offset = 0;
   while (len > 0) {
     const transactions = await getTransactions(blockTimestamp);
@@ -185,35 +175,35 @@ async function storeTransactions() {
       transactions.map((item) => {
         try {
           TxActions.update(
-              {
-                transaction_hash: item.transaction_hash,
-                block_timestamp: Number(item.block_timestamp),
-                block_height: Number(item.block_height),
-                signer_account_id: item.signer_account_id,
-                receiver_account_id: item.receiver_account_id,
-                receipt_receiver_account_id: item.receipt_receiver_account_id,
-                predecessor_account_id: item.predecessor_account_id,
-                gas: item.gas,
-                action_kind: item.action_kind,
-                method_name: item.args.method_name,
-                args_base64: item.args.args_base64 ? Buffer.from(item.args.args_base64, 'base64').toString('utf-8') : null,
-                args: !item.args.args_base64 ? item.args : null,
-              },
-              {
-                transaction_hash: item.transaction_hash,
-                block_timestamp: Number(item.block_timestamp),
-                block_height: Number(item.block_height),
-                signer_account_id: item.signer_account_id,
-                receiver_account_id: item.receiver_account_id,
-                receipt_receiver_account_id: item.receipt_receiver_account_id,
-                predecessor_account_id: item.predecessor_account_id,
-                gas: item.gas,
-                action_kind: item.action_kind,
-                method_name: item.args.method_name,
-                args_base64: item.args.args_base64 ? Buffer.from(item.args.args_base64, 'base64').toString('utf-8') : null,
-                args: !item.args.args_base64 ? item.args : null,
-              },
-              {upsert: true}
+            {
+              transaction_hash: item.transaction_hash,
+              block_timestamp: Number(item.block_timestamp),
+              block_height: Number(item.block_height),
+              signer_account_id: item.signer_account_id,
+              receiver_account_id: item.receiver_account_id,
+              receipt_receiver_account_id: item.receipt_receiver_account_id,
+              predecessor_account_id: item.predecessor_account_id,
+              gas: item.gas,
+              action_kind: item.action_kind,
+              method_name: item.args.method_name,
+              args_base64: item.args.args_base64 ? Buffer.from(item.args.args_base64, 'base64').toString('utf-8') : null,
+              args: !item.args.args_base64 ? item.args : null,
+            },
+            {
+              transaction_hash: item.transaction_hash,
+              block_timestamp: Number(item.block_timestamp),
+              block_height: Number(item.block_height),
+              signer_account_id: item.signer_account_id,
+              receiver_account_id: item.receiver_account_id,
+              receipt_receiver_account_id: item.receipt_receiver_account_id,
+              predecessor_account_id: item.predecessor_account_id,
+              gas: item.gas,
+              action_kind: item.action_kind,
+              method_name: item.args.method_name,
+              args_base64: item.args.args_base64 ? Buffer.from(item.args.args_base64, 'base64').toString('utf-8') : null,
+              args: !item.args.args_base64 ? item.args : null,
+            },
+            {upsert: true}
           )
         } catch (e) {
           console.log(e);
@@ -223,42 +213,3 @@ async function storeTransactions() {
     }
   }
 }
-
-
-
-/*
-async function consolidateData() {
-  const data = TxActions.find({"action_kind": "TRANSFER"}).fetch();
-  for (const item of data) {
-    //console.log(data);
-    try {
-      ConsolidatedDataDeposits.update(
-        {
-          kind: item.action_kind,
-          dao: item.predecessor_account_id,
-          signer_account_id: item.signer_account_id,
-          receiver_account_id: item.receiver_account_id,
-        },
-        {
-          kind: item.action_kind,
-          dao: item.predecessor_account_id,
-          signer_account_id: item.signer_account_id,
-          receiver_account_id: item.receiver_account_id,
-          deposit: item.args.deposit,
-
-        },
-        {upsert: true}
-      )
-    } catch (e) {
-      console.log(e);
-    }
-
-  }
-}
-
-consolidateData().then((r) => {
-  //console.log(r)
-}).catch((e) => {
-  console.log(e);
-});
-*/
