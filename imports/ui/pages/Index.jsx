@@ -165,8 +165,8 @@ const Index = () => {
     },
     cardInner:{
       position: "relative",
-      display: "inline-block",
-      bottom: "calc(100% - 10px)",
+      display: "block",
+      bottom: "calc(100% - 5px)",
       width: "100%",
       padding: "10px 10px",
     },
