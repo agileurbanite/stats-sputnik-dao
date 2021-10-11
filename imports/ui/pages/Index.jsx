@@ -5,9 +5,8 @@ import Footer from "../components/Footer";
 import {useTracker} from "meteor/react-meteor-data";
 import {useGlobalMutation, useGlobalState} from '../../utils/container'
 import {Decimal} from 'decimal.js';
-import {Card, Box, CardContent, Container, Divider, Grid, makeStyles, Typography, Link, Chip, Button, TextField} from "@material-ui/core";
+import {Card, Box, LinearProgress ,CardContent, Container, Divider, Grid, makeStyles, Typography, Link, Chip, Button, TextField} from "@material-ui/core";
 import {DataGrid, GridToolbarContainer, GridToolbarExport,} from '@material-ui/data-grid';
-
 
 import {blue} from '@material-ui/core/colors';
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -15,64 +14,65 @@ import {DaoData, NearPrice, TxActions} from "../../api/data";
 import IconButton from "@material-ui/core/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import SearchIcon from "@material-ui/icons/Search";
-import Icon from '@material-ui/core/Icon';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 const yoctoNEAR = 1000000000000000000000000;
 
 const useDaoData = () =>
-  useTracker(() => {
-    const subscription = Meteor.subscribe("DaoData");
-    const daoData = DaoData.find().fetch();
+    useTracker(() => {
+      const subscription = Meteor.subscribe("DaoData");
+      const daoData = DaoData.find().fetch();
 
-    const meteorStatus = Meteor.status();
+      const meteorStatus = Meteor.status();
 
-    return {
-      daoData: daoData,
-      isLoadingDaoData: !subscription.ready(),
-      meteorStatus: meteorStatus,
-    };
-  }, []);
+      return {
+        daoData: daoData,
+        isLoadingDaoData: !subscription.ready(),
+        meteorStatus: meteorStatus,
+      };
+    }, []);
 
 const useNearPrice = () =>
-  useTracker(() => {
-    const subscription = Meteor.subscribe("NearPrice");
-    const nearPrice = NearPrice.find().fetch();
-    const meteorStatus = Meteor.status();
+    useTracker(() => {
+      const subscription = Meteor.subscribe("NearPrice");
+      const nearPrice = NearPrice.find().fetch();
+      const meteorStatus = Meteor.status();
 
-    return {
-      nearPrice: nearPrice,
-      isLoadingNearPrice: !subscription.ready(),
-      meteorStatus: meteorStatus,
-    };
-  }, []);
+      return {
+        nearPrice: nearPrice,
+        isLoadingNearPrice: !subscription.ready(),
+        meteorStatus: meteorStatus,
+      };
+    }, []);
 
 const useAllDeposits = () =>
-  useTracker(() => {
-    const subscription = Meteor.subscribe("TxActions");
-    const allDeposits = TxActions.find({"action_kind": "TRANSFER"}).fetch();
+    useTracker(() => {
+      const subscription = Meteor.subscribe("TxActions");
+      const allDeposits = TxActions.find({"action_kind": "TRANSFER"}).fetch();
 
-    const meteorStatus = Meteor.status();
+      const meteorStatus = Meteor.status();
 
-    return {
-      allDeposits: allDeposits,
-      isLoadingAllDeposits: !subscription.ready(),
-      meteorStatus: meteorStatus,
-    };
-  }, []);
+      return {
+        allDeposits: allDeposits,
+        isLoadingAllDeposits: !subscription.ready(),
+        meteorStatus: meteorStatus,
+      };
+    }, []);
 
 const useTxActions = () =>
-  useTracker(() => {
-    const subscription = Meteor.subscribe("TxActions");
-    const txActions = TxActions.find({}).fetch();
+    useTracker(() => {
+      const subscription = Meteor.subscribe("TxActions");
+      const txActions = TxActions.find({}).fetch();
 
-    const meteorStatus = Meteor.status();
+      const meteorStatus = Meteor.status();
 
-    return {
-      txActions: txActions,
-      isLoadingTxActions: !subscription.ready(),
-      meteorStatus: meteorStatus,
-    };
-  }, []);
+      return {
+        txActions: txActions,
+        isLoadingTxActions: !subscription.ready(),
+        meteorStatus: meteorStatus,
+      };
+    }, []);
 
 const Index = () => {
   const stateCtx = useGlobalState();
@@ -263,6 +263,65 @@ const Index = () => {
     window.open("https://sputnik.fund/#/" + value, '_blank').focus();
   }
 
+  const getMonthTotalActivity = () =>{
+    const currYear = new Date().getFullYear();
+    const currMonth = new Date().getMonth()+1;
+    const monthActions = [...txActions].filter( act => {
+      const actionDate = new Date(parseInt(act.block_timestamp.toString().substring(0, 13)));
+      return actionDate.getFullYear() === currYear
+          && actionDate.getMonth()+1 === currMonth
+    }) || [];
+    return monthActions;
+  }
+
+  const getMonthDAOActivity = (daoName) =>{
+    return getMonthTotalActivity().filter(act => act.receiver_account_id === daoName);
+  }
+
+
+  const ChartActivity = (props) => {
+    const total =  props.options.value.total;
+    const month = props.options.value.month;
+    const curr = (month*100)/total;
+    const data = [
+      {
+        name: props.options.value.daoName,
+        total: total,
+        month:  month,
+        amt: (total - month),
+      },
+    ];
+
+    const CustomizedLabel =({x, y, fill, value}) => {
+      return (
+          <text x={x} y={y} dy={5} fontFamily='sans-serif' fill={fill} fontSize={10}>
+            {total}/{month}
+          </text>
+      )
+    };
+
+
+    return (
+        <>
+          {
+            !props.options.value.loading ? (
+                    <ResponsiveContainer width="100%" height="35%">
+                      <BarChart width={150}
+                                height={75} data={data} layout="vertical">
+                        <XAxis type="number" hide/>
+                        <YAxis type="category" dataKey="name" hide/>
+                        <Bar  dataKey="month" stackId="a" fill="#8884d8"/>
+                        <Bar dataKey="amt" stackId="a" fill="#82ca9d"/>
+                      </BarChart>
+                    </ResponsiveContainer>) :
+                <Box sx={{ width: '100%' }}>
+                  <LinearProgress />
+                </Box>
+          }
+        </>
+    )
+  }
+
 
   const columns = [
     {field: 'id', headerName: 'ID', hide: true, width: 80},
@@ -272,14 +331,25 @@ const Index = () => {
       width: 250,
       disableClickEventBubbling: true,
       renderCell: (params) => (
-        <Link
-          component="button"
-          variant="body2"
-          color="inherit"
-          onClick={() => handleDaoClick(params.value)}
-        >
-          {params.value}
-        </Link>
+          <Link
+              component="button"
+              variant="body2"
+              color="inherit"
+              onClick={() => handleDaoClick(params.value)}
+          >
+            {params.value}
+          </Link>
+      )
+    },
+    {
+      field: 'activity',
+      headerName: 'Activity',
+      width: 250,
+      disableClickEventBubbling: true,
+      renderCell: (params) => (
+          <ChartActivity
+              options={params}
+          />
       )
     },
     {field: 'nearAmount', headerName: 'Ⓝ Value', width: 140, type: 'number'},
@@ -344,6 +414,12 @@ const Index = () => {
 
       const row = {
         id: id,
+        activity: {
+          daoName: item.daoName,
+          total: !isLoadingTxActions ? getMonthTotalActivity().length : 0,
+          month: !isLoadingTxActions ? getMonthDAOActivity(item.daoName).length : 0,
+          loading: isLoadingTxActions,
+        },
         daoName: item.daoName,
         nearAmount: new Decimal(item.amount / yoctoNEAR).toFixed(0),
         usdAmount:  new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(new Decimal(item.amount / yoctoNEAR)).toFixed(0),
@@ -431,9 +507,9 @@ const Index = () => {
 
   function ExportToolbar() {
     return (
-      <GridToolbarContainer>
-        <GridToolbarExport className={classes.toolbarExport}/>
-      </GridToolbarContainer>
+        <GridToolbarContainer>
+          <GridToolbarExport className={classes.toolbarExport}/>
+        </GridToolbarContainer>
     );
   }
 
@@ -453,6 +529,16 @@ const Index = () => {
   };
 
 
+  const getTotalActivity = () => {
+    return txActions ? txActions.length: 0;
+  }
+
+  const getTotalActivityByDAO = (daoName) => {
+    return txActions.filter(action=>action.receiver_account_id===daoName).length;
+  }
+
+
+
   const GridFilterBtn = (props) => {
     return (
         <>
@@ -462,8 +548,8 @@ const Index = () => {
                   <Box pl={1}>
                     <Typography component="span" color="textSecondary" variant="body2">{columns.find(column=>column.field===filter).headerName}:</Typography>
                     <Chip className={classes.filterButton}
-                        label={filterRanges[filter][0]+"-"+filterRanges[filter][1]}
-                        onDelete={(e)=>clearFilter(e, filter)}
+                          label={filterRanges[filter][0]+"-"+filterRanges[filter][1]}
+                          onDelete={(e)=>clearFilter(e, filter)}
                     />
                   </Box>
                 </React.Fragment>
@@ -474,104 +560,104 @@ const Index = () => {
   }
 
   return (
-    <div>
-      <div className={classes.root}>
-        <CssBaseline/>
-        <Navbar
-            clearFilter={clearFilter}
-            handleSearchChange={handleSearchChange}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            multipleFilter={multipleFilter}
-            hideColumn={hideColumn}
-            applyFilters={applyFilters}
-            clearAllFilter={clearAllFilter}
-            columns={stateColumns}
-            rangeVal = {getDefFilterRanges()}
-            sliderVal = {getSliderRangeVal()}
-            filteredRows = {getFilteredRows()}
-            rows={[...rows]}/>
-        <Container component="main" className={classes.main}>
+      <div>
+        <div className={classes.root}>
+          <CssBaseline/>
+          <Navbar
+              clearFilter={clearFilter}
+              handleSearchChange={handleSearchChange}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              multipleFilter={multipleFilter}
+              hideColumn={hideColumn}
+              applyFilters={applyFilters}
+              clearAllFilter={clearAllFilter}
+              columns={stateColumns}
+              rangeVal = {getDefFilterRanges()}
+              sliderVal = {getSliderRangeVal()}
+              filteredRows = {getFilteredRows()}
+              rows={[...rows]}/>
+          <Container component="main" className={classes.main}>
 
-          <Grid container
-                spacing={3}
-                justifyContent="center"
-                className={classes.container}
-          >
-            <Grid item xs={12} sm={6} md={6}>
-              <Typography variant="h4" component="h5" gutterBottom>
-                Sputnik DAO v1 Statistics <Divider/>under development
-              </Typography>
+            <Grid container
+                  spacing={3}
+                  justifyContent="center"
+                  className={classes.container}
+            >
+              <Grid item xs={12} sm={6} md={6}>
+                <Typography variant="h4" component="h5" gutterBottom>
+                  Sputnik DAO v1 Statistics <Divider/>under development
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6} md={6}>
+                <Typography color="textSecondary" gutterBottom>
+                  This website is in beta and does not provide an investment or other advice.<br/> Please do your own
+                  research.
+                </Typography>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              <Typography color="textSecondary" gutterBottom>
-                This website is in beta and does not provide an investment or other advice.<br/> Please do your own
-                research.
-              </Typography>
-            </Grid>
-          </Grid>
 
-          <Grid container
-                spacing={1}
-                style={
-                  {justifyContent: mobileView ? 'center' : 'space-between'}
-                }
-                className={classes.container}
-          >
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
-              <Box className={classes.cardWrapper}>
-                <Box className={classes.gradient1+ ' '+classes.cardOuter}>
+            <Grid container
+                  spacing={1}
+                  style={
+                    {justifyContent: mobileView ? 'center' : 'space-between'}
+                  }
+                  className={classes.container}
+            >
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+                <Box className={classes.cardWrapper}>
+                  <Box className={classes.gradient1+ ' '+classes.cardOuter}>
 
+                  </Box>
+                  <Card className={classes.gradient1+ ' ' + classes.daoCard + ' ' + classes.cardInner}>
+                    <CardContent>
+                      <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                        {!isLoadingDaoData ? daoData.length : null}
+                      </Typography>
+                      <Typography className={classes.title} gutterBottom>
+                        Number of DAOs
+                      </Typography>
+                    </CardContent>
+                  </Card>
                 </Box>
-                <Card className={classes.gradient1+ ' ' + classes.daoCard + ' ' + classes.cardInner}>
-                  <CardContent>
-                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                      {!isLoadingDaoData ? daoData.length : null}
-                    </Typography>
-                    <Typography className={classes.title} gutterBottom>
-                      Number of DAOs
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-            </Grid>
-             <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
-               <Box className={classes.cardWrapper}>
-                 <Box className={classes.gradient2+ ' '+classes.cardOuter}>
+              </Grid>
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+                <Box className={classes.cardWrapper}>
+                  <Box className={classes.gradient2+ ' '+classes.cardOuter}>
 
-                 </Box>
-                 <Card className={classes.gradient2+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
-                   <CardContent>
-                     <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                       {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                     </Typography>
-                     <Typography className={classes.title}>
-                       TVL (NEAR)
-                     </Typography>
-                     <Typography className={classes.pos} variant="body2" component="span">
-                       {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                     </Typography>
-                   </CardContent>
-                 </Card>
-               </Box>
-            </Grid>
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
-              <Box className={classes.cardWrapper}>
-                <Box className={classes.gradient3+ ' '+classes.cardOuter}>
-
+                  </Box>
+                  <Card className={classes.gradient2+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                    <CardContent>
+                      <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                        {!isLoadingDaoData ? tvl.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                      </Typography>
+                      <Typography className={classes.title}>
+                        TVL (NEAR)
+                      </Typography>
+                      <Typography className={classes.pos} variant="body2" component="span">
+                        {!isLoadingNearPrice && !isLoadingDaoData ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(tvl).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                      </Typography>
+                    </CardContent>
+                  </Card>
                 </Box>
-                <Card className={classes.gradient3+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
-                  <CardContent>
-                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                      {countUnique(allAccounts)}
-                    </Typography>
-                    <Typography className={classes.title} gutterBottom>
-                      Number of account interactions
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-            </Grid>
+              </Grid>
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+                <Box className={classes.cardWrapper}>
+                  <Box className={classes.gradient3+ ' '+classes.cardOuter}>
+
+                  </Box>
+                  <Card className={classes.gradient3+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                    <CardContent>
+                      <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                        {countUnique(allAccounts)}
+                      </Typography>
+                      <Typography className={classes.title} gutterBottom>
+                        Number of account interactions
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Grid>
               <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
                 <Box className={classes.cardWrapper}>
                   <Box className={classes.gradient4+ ' '+classes.cardOuter}>
@@ -588,28 +674,28 @@ const Index = () => {
                     </CardContent>
                   </Card>
                 </Box>
-            </Grid>
-            <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
-              <Box className={classes.cardWrapper}>
-                <Box className={classes.gradient5+ ' '+classes.cardOuter}>
+              </Grid>
+              <Grid item xs={6} sm={4} md={6} lg={2} align="center" className={classes.gridItem}>
+                <Box className={classes.cardWrapper}>
+                  <Box className={classes.gradient5+ ' '+classes.cardOuter}>
 
+                  </Box>
+                  <Card className={classes.gradient5+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
+                    <CardContent>
+                      <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
+                        {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                      </Typography>
+                      <Typography className={classes.title} gutterBottom>
+                        Total Payout
+                      </Typography>
+                      <Typography className={classes.pos} variant="body2" component="span" gutterBottom>
+                        {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
+                      </Typography>
+                    </CardContent>
+                  </Card>
                 </Box>
-                <Card className={classes.gradient5+ ' ' + classes.daoCard + ' '+ classes.cardInner}>
-                  <CardContent>
-                    <Typography className={classes.daoCardHeader} variant="h3" component="h3" gutterBottom>
-                      {!isLoadingAllDeposits ? allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                    </Typography>
-                    <Typography className={classes.title} gutterBottom>
-                      Total Payout
-                    </Typography>
-                    <Typography className={classes.pos} variant="body2" component="span" gutterBottom>
-                      {!isLoadingAllDeposits ? '$' + new Decimal(nearPrice[0].near_price_data.current_price.usd).mul(allDeposits.reduce((a, v) => a = a + (v.args.deposit / yoctoNEAR), 0)).toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : null}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-            </Grid>
-            {/*}
+              </Grid>
+              {/*}
             <Grid item xs={12} sm={6} md={6} lg={2} align="center">
               <Card className={classes.daoCard}>
                 <CardContent>
@@ -626,8 +712,8 @@ const Index = () => {
               </Card>
             </Grid>
             */}
-          </Grid>
-          { !mobileView ?
+            </Grid>
+            { !mobileView ?
                 <Grid container
                       spacing={1}
                       justifyContent="center"
@@ -652,44 +738,44 @@ const Index = () => {
                     />
                   </Grid>
                 </Grid>
-              : null}
-          <Grid container spacing={3}>
-            <Grid item item xs={12} md={12}>
-              <Box display="flex" justifyContent="flex-start">
-                {
-                  Object.keys(getFilterRanges()).length ?
+                : null}
+            <Grid container spacing={3}>
+              <Grid item item xs={12} md={12}>
+                <Box display="flex" justifyContent="flex-start">
+                  {
+                    Object.keys(getFilterRanges()).length ?
                         <Grid container alignItems="center" className={classes.gridFilterPanel}>
                           <Button color="primary" className={classes.clearButton} onClick={(e)=>clearAllFilter(e)}>X Clear All</Button>
                           <Divider orientation="vertical" flexItem />
                           <GridFilterBtn filterRanges={getFilterRanges()} />
                         </Grid>
-                  : null
+                        : null
 
-                }
-              </Box>
+                  }
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={12}>
+                {!isLoadingDaoData && !isLoadingNearPrice ?
+                    <div>
+                      <DataGrid className={classes.dataGrid}
+                                rows={getFilteredRows()}
+                                autoHeight={true}
+                                columns={stateColumns}
+                                pageSize={100}
+                                disableColumnFilter
+                                disableColumnSelector
+                                disableColumnMenu
+                                components={{
+                                  Toolbar: ExportToolbar,
+                                }}/>
+                    </div>
+                    : null}
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={12}>
-              {!isLoadingDaoData && !isLoadingNearPrice ?
-                <div>
-                  <DataGrid className={classes.dataGrid}
-                            rows={getFilteredRows()}
-                            autoHeight={true}
-                            columns={stateColumns}
-                            pageSize={100}
-                            disableColumnFilter
-                            disableColumnSelector
-                            disableColumnMenu
-                            components={{
-                              Toolbar: ExportToolbar,
-                            }}/>
-                </div>
-                : null}
-            </Grid>
-          </Grid>
-        </Container>
-        <Footer/>
+          </Container>
+          <Footer/>
+        </div>
       </div>
-    </div>
   );
 };
 
