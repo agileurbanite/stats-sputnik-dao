@@ -400,7 +400,7 @@ const Index = () => {
             <>
                 <Card>
                     <CardContent>
-                        <Typography style={{textAlign: 'left'}}>Total Deposits: {allDeposits.length}</Typography>
+                        <Typography style={{textAlign: 'left'}}>All time Deposits: {allDeposits.length}</Typography>
                         <Box style={{height: 100, width: '100%'}}>
                             <ResponsiveContainer width="100%" height="100%">
                                 {!isLoadingAllDeposits ? (<LineChart
@@ -426,7 +426,7 @@ const Index = () => {
             </>
         )
     }
-  
+
   const ChartDAOActivity = (props) => {
     const {monthDAOActivity, daoName} = props.options.value;
 
@@ -518,8 +518,7 @@ const Index = () => {
             <>
                 <Card>
                     <CardContent>
-                        <Typography style={{textAlign: 'left'}} variant="body2">{moment(last30day).format('DD MMM')}-{moment().format('DD MMM')}</Typography>
-                        <Typography style={{textAlign: 'left'}}>Total Activity: {totalActivity}</Typography>
+                        <Typography style={{textAlign: 'left'}}>Last 30 days Activity: {totalActivity}</Typography>
                         <Box style={{height: 100, width: '100%'}}>
                             <ResponsiveContainer id="total-activity" width="100%" height="100%">
                                 {!isLoadingTxActions ? (<LineChart width={500} height={300} data={data}>
@@ -564,7 +563,7 @@ const Index = () => {
     },
     {
       field: 'activity',
-      headerName: 'Activity',
+      headerName: '30-days activity',
       width: 180,
       disableClickEventBubbling: true,
       renderCell: (params) => (
@@ -584,7 +583,7 @@ const Index = () => {
     },
     {
       field: 'deposits',
-      headerName: 'Locked tokens',
+      headerName: '30-days deposits',
       width: 180,
       disableClickEventBubbling: true,
       renderCell: (params) => (
