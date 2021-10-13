@@ -366,13 +366,12 @@ const Index = () => {
 
     const ChartTotalLockedTokens = () => {
         let data = [];
-        const totalDeposits = monthTotalDeposits.length;
-        for (let i=0; i<=30; i++){
-            const date = moment(last30day,'yyyymmdd').add(i, 'days').format('YYYYMMDD');
-            data.push({date, count: 0, total: 0});
+        for (let i=12; i>=0; i--){
+            let month = moment().add(-i, 'month').format('YYYYMM')
+            data.push({date: month, count: 0, total: 0});
         }
-        for (const action of monthTotalDeposits){
-            const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMMDD');
+        for (const action of allDeposits){
+            const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMM');
             const dp = data.find( item => {
                 return item.date === actionDate
             });
@@ -383,7 +382,7 @@ const Index = () => {
 
         const CustomTooltip = ({ active, payload, label }) => {
             if (active) {
-                const date = moment(label).format('DD MMM');
+                const date = moment(label).format('YYYY MMM');
                 return (
                     <>
                         <Box>
@@ -401,8 +400,7 @@ const Index = () => {
             <>
                 <Card>
                     <CardContent>
-                        <Typography style={{textAlign: 'left'}} variant="body2">{moment(last30day).format('DD MMM')}-{moment().format('DD MMM')}</Typography>
-                        <Typography style={{textAlign: 'left'}}>Total Deposits: {totalDeposits}</Typography>
+                        <Typography style={{textAlign: 'left'}}>Total Deposits: {allDeposits.length}</Typography>
                         <Box style={{height: 100, width: '100%'}}>
                             <ResponsiveContainer width="100%" height="100%">
                                 {!isLoadingAllDeposits ? (<LineChart
