@@ -272,6 +272,7 @@ const Index = () => {
 
   let monthTotalActivity = [];
   let monthTotalDeposits = [];
+
   const last30day = moment().add(-30, 'days');
 
 
@@ -303,7 +304,7 @@ const Index = () => {
     }
 
 
-  const ChartLockedTokens = (props) => {
+  const ChartDAOLockedTokens = (props) => {
     const {monthTotalDeposits, daoName} = props.options.value;
 
     let data = [];
@@ -331,7 +332,7 @@ const Index = () => {
                   <>
                   <Box>
                       <p style={{fontSize: "10px", padding: 2}}>
-                          {date} DAO:{payload[0].value} Total:{payload[1].value}
+                          {date} DAO:{payload[0].value}
                       </p>
                   </Box>
               </>
@@ -350,10 +351,9 @@ const Index = () => {
                                 height={150}
                                 data={data}>
                                 <XAxis dataKey="date" hide/>
-                                <YAxis hide type="number" minTickGap={1} scale="sqrt" ticks={[0,1,2,3,4,5,10,50, 100, 150, 200]} tickCount={1} domain={[0, 'dataMax']}/>
+                                <YAxis hide type="number" minTickGap={1} scale="sqrt" ticks={[0,1,2,3,4,5,10,50]} tickCount={1} domain={[0, 'dataMax']}/>
                                 <Tooltip wrapperStyle={{backgroundColor: stateCtx.config.darkMode==='light' ? '#eef2f6a3' : '#161a207a'}} content={<CustomTooltip />}/>
-                                <Line type="monotone" dataKey="count"  stroke="#8884d8" />
-                                <Line type="monotone" dataKey="total"  stroke="#ff7300" />
+                                <Line type="monotone" dataKey="count" dot={false}  stroke="#8884d8" />
                             </LineChart>
                         </ResponsiveContainer>) :
                     <Box sx={{ width: '100%' }}>
@@ -363,9 +363,74 @@ const Index = () => {
         </>
     )
   }
+
+    const ChartTotalLockedTokens = () => {
+        let data = [];
+        const totalDeposits = monthTotalDeposits.length;
+        for (let i=0; i<=30; i++){
+            const date = moment(last30day,'yyyymmdd').add(i, 'days').format('YYYYMMDD');
+            data.push({date, count: 0, total: 0});
+        }
+        for (const action of monthTotalDeposits){
+            const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMMDD');
+            const dp = data.find( item => {
+                return item.date === actionDate
+            });
+            if (dp){
+                dp.total = dp.total +1;
+            }
+        }
+
+        const CustomTooltip = ({ active, payload, label }) => {
+            if (active) {
+                const date = moment(label).format('DD MMM');
+                return (
+                    <>
+                        <Box>
+                            <p style={{fontSize: "10px", padding: 2}}>
+                                {date} Total:{payload[0].value}
+                            </p>
+                        </Box>
+                    </>
+                );
+            }
+            return null;
+        };
+
+        return (
+            <>
+                <Card>
+                    <CardContent>
+                        <Typography style={{textAlign: 'left'}} variant="body2">{moment(last30day).format('DD MMM')}-{moment().format('DD MMM')}</Typography>
+                        <Typography style={{textAlign: 'left'}}>Total Deposits: {totalDeposits}</Typography>
+                        <Box style={{height: 100, width: '100%'}}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                {!isLoadingAllDeposits ? (<LineChart
+                                        width={300}
+                                        height={150}
+                                        data={data}>
+                                        <XAxis dataKey="date" hide/>
+                                        <YAxis hide type="number" minTickGap={1} scale="sqrt"
+                                               tickCount={1}
+                                               domain={[0, 'dataMax']}/>
+                                        <Tooltip
+                                            wrapperStyle={{backgroundColor: stateCtx.config.darkMode === 'light' ? '#eef2f6a3' : '#161a207a'}}
+                                            content={<CustomTooltip/>}/>
+                                        <Line type="monotone" dataKey="total" dot={false} stroke="#ff7300"/>
+                                    </LineChart>) :
+                                    <Box sx={{ width: '100%' }}>
+                                        <LinearProgress />
+                                    </Box> }
+                            </ResponsiveContainer>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </>
+        )
+    }
   
-  const ChartActivity = (props) => {
-    const {monthDAOActivity} = props.options.value;
+  const ChartDAOActivity = (props) => {
+    const {monthDAOActivity, daoName} = props.options.value;
 
     let data = [];
 
@@ -403,7 +468,7 @@ const Index = () => {
           {
             !props.options.value.loading ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart width={300} height={150} data={data}>
+                      <LineChart id={daoName} width={300} height={150} data={data}>
                         <XAxis dataKey="date"  hide/>
                         <YAxis type="number" minTickGap={1} scale="sqrt" ticks={[0,1,2,3,4,5,10]} tickCount={1} domain={[0, 'dataMax']} hide/>
                           <Tooltip wrapperStyle={{background: stateCtx.config.darkMode==='light' ? '#eef2f6a3' : '#161a207a'}} content={<CustomTooltip />}  />
@@ -418,6 +483,68 @@ const Index = () => {
     )
   }
 
+
+    const ChartTotalActivity = (props) => {
+        const totalActivity = monthTotalActivity.length;
+        let data = [];
+
+        for (let i=0; i<=30; i++){
+            const date = moment(last30day,'yyyymmdd').add(i, 'days').format('YYYYMMDD');
+            data.push({date, count: 0});
+        }
+       for (const action of monthTotalActivity){
+            const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMMDD');
+            const dt = data.find( item => {
+                return item.date === actionDate
+            });
+            if (dt){
+                dt.count = dt.count +  1;
+            }
+        }
+
+        const CustomTooltip = ({ active, payload, label }) => {
+            if (active) {
+                const date = moment(label).format('DD MMM');
+                return (
+                    <div className="custom-tooltip">
+                        <p style={{fontSize: "10px", padding: 2}}>
+                            {date} Total:{payload[0].value}
+                        </p>
+                    </div>
+                );
+            }
+            return null;
+        };
+
+        return (
+            <>
+                <Card>
+                    <CardContent>
+                        <Typography style={{textAlign: 'left'}} variant="body2">{moment(last30day).format('DD MMM')}-{moment().format('DD MMM')}</Typography>
+                        <Typography style={{textAlign: 'left'}}>Total Activity: {totalActivity}</Typography>
+                        <Box style={{height: 100, width: '100%'}}>
+                            <ResponsiveContainer id="total-activity" width="100%" height="100%">
+                                {!isLoadingTxActions ? (<LineChart width={500} height={300} data={data}>
+                                        <XAxis dataKey="date" hide/>
+                                        <YAxis type="number" minTickGap={1} scale="sqrt"
+                                               ticks={[0, 1, 2, 3, 4, 5, 10]} tickCount={1}
+                                               domain={[0, 'dataMax']} hide/>
+                                        <Tooltip
+                                            wrapperStyle={{background: stateCtx.config.darkMode === 'light' ? '#eef2f6a3' : '#161a207a'}}
+                                            content={<CustomTooltip/>}/>
+                                        <Line type="monotone" dataKey="count" stroke="#00bcd4" strokeWidth='1'
+                                              dot={false}/>
+                                    </LineChart>) :
+                                    <Box sx={{width: '100%'}}>
+                                        <LinearProgress/>
+                                    </Box>}
+                            </ResponsiveContainer>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </>
+        )
+    }
 
   const columns = [
     {field: 'id', headerName: 'ID', hide: true, width: 80},
@@ -443,7 +570,7 @@ const Index = () => {
       width: 180,
       disableClickEventBubbling: true,
       renderCell: (params) => (
-          <ChartActivity
+          <ChartDAOActivity
               options={params}
           />
       )
@@ -463,7 +590,7 @@ const Index = () => {
       width: 180,
       disableClickEventBubbling: true,
       renderCell: (params) => (
-          <ChartLockedTokens
+          <ChartDAOLockedTokens
               options={params}
           />
       )
@@ -635,7 +762,6 @@ const Index = () => {
 
   const handleSearchChange = (e) => {
     e.preventDefault();
-    console.log('e.target.value', e.target.value)
     setSearchTerm(e.target.value);
   };
 
@@ -840,8 +966,22 @@ const Index = () => {
                   </Grid>
                 </Grid>
                 : null}
+
+           <Grid container
+                 spacing={1}
+                 style={
+                     {justifyContent: mobileView ? 'center' : 'space-between'}
+                 }
+                 className={classes.container}>
+               <Grid item  xs={6} sm={4} md={6} lg={4} align="center" className={classes.gridItem}>
+                   <ChartTotalActivity />
+               </Grid>
+               <Grid item  xs={6} sm={4} md={6} lg={4} align="center" className={classes.gridItem}>
+                   <ChartTotalLockedTokens />
+               </Grid>
+           </Grid>
             <Grid container spacing={3}>
-              <Grid item item xs={12} md={12}>
+              <Grid item xs={12} md={12}>
                 <Box display="flex" justifyContent="flex-start">
                   {
                     Object.keys(getFilterRanges()).length ?
