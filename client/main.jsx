@@ -7,7 +7,7 @@ import App from "../imports/App";
 //import * as serviceWorker from './serviceWorker';
 
 if (Meteor.settings.public.node_env !== "development") {
-  console.log = function () {};
+ // console.log = function () {};
 }
 
 Meteor.startup(() => {

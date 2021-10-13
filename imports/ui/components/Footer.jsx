@@ -10,15 +10,11 @@ function Copyright() {
     <CssBaseline>
       <Typography variant="body2" color="textSecondary" align="center">
         <Link color="inherit" href="/">
-          Sputnik Dao Stats
+          Sputnik v1 Dao Stats
         </Link>{' '}
-        {new Date().getFullYear()}
-        <h3>Proudly presented to you by <Link target="_blank" color="inherit" href="https://starduststaking.com">
-          Stardust Staking and Solutions
-        </Link>
-        </h3>
-        The software is an <b>open source</b> and provided “as is”, without warranty of any kind.
-        View on <Link target="_blank" rel="nofollow" color="inherit" href="https://github.com/Stardust-Staking/stats-sputnik-dao">
+        {new Date().getFullYear()}.
+        {" "}The software is an <b>open source</b> and provided “as is”, without warranty of any kind.
+        View on <Link target="_blank" rel="nofollow" color="inherit" href="https://github.com/NEAR-labs/stats-sputnik-dao">
         Github
       </Link>
 
@@ -31,8 +27,6 @@ const useStyles = makeStyles((theme) => ({
   footer: {
     padding: theme.spacing(3, 2),
     marginTop: 'auto',
-    backgroundColor:
-      theme.palette.type === 'light' ? theme.palette.grey[200] : theme.palette.grey[800],
   },
 }));
 

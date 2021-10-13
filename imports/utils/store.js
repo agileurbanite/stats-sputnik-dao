@@ -10,6 +10,7 @@ const defaultState = {
   loading: false,
   config: {
     darkMode: 'light',
+    filterOpen: false,
     ...readDefaultState(),
   }
 }

@@ -3,24 +3,32 @@ import {Route, Switch} from 'react-router-dom'
 import Index from './ui/pages/Index'
 import {BrowserRouterHook} from './utils/use-router'
 import NotFound from "./ui/pages/NotFound";
-import {createMuiTheme, ThemeProvider} from '@material-ui/core/styles';
+import { createTheme, ThemeProvider, responsiveFontSizes} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {useGlobalState, useGlobalMutation} from './utils/container'
+import blue from '@material-ui/core/colors/blue';
 
 function App() {
   const stateCtx = useGlobalState();
   const mutationCtx = useGlobalMutation();
 
-
-  const theme = React.useMemo(
+  let theme = React.useMemo(
     () =>
-      createMuiTheme({
+      createTheme({
         palette: {
           type: stateCtx.config.darkMode,
+          primary: {
+             main: blue['A700'],
+          },
+          background: {
+              default: stateCtx.config.darkMode==='light' ? '#eef2f6':'#161a20',
+          }
         },
       }),
     [stateCtx.config.darkMode],
   );
+
+  theme = responsiveFontSizes(theme);
 
   return (
     <ThemeProvider theme={theme}>

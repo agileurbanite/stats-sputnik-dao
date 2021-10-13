@@ -2,31 +2,52 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Drawer,
   Switch,
   Divider,
-  Avatar,
-  Chip,
   InputBase,
 } from "@material-ui/core";
-import {fade, makeStyles} from '@material-ui/core/styles';
+import {alpha, makeStyles, withStyles } from '@material-ui/core/styles';
 import MenuIcon from "@material-ui/icons/Menu";
 import SearchIcon from '@material-ui/icons/Search';
+import Brightness4Icon from '@material-ui/icons/Brightness4';
+import Brightness2Icon from '@material-ui/icons/Brightness2';
 import React, {useState, useEffect} from "react";
 import {useGlobalState, useGlobalMutation} from '../../utils/container'
-
-
+import ColumnSettings from "./ColumnSettings";
+import FilterPanel from "./FilterPanel";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    margin: 0,
+    padding: theme.spacing(2),
+    '& .MuiTextField-root': {
+      margin: theme.spacing(1),
+      width: 200,
+    },
+  },
   header: {
     backgroundColor: "darkgrey",
     paddingRight: "79px",
     paddingLeft: "118px",
+    borderBottom: "1px solid",
+    boxShadow: "0",
     "@media (max-width: 900px)": {
       paddingLeft: 0,
     },
+  },
+  divider: {
+    margin: "10px",
+  },
+  appBar: {
+    boxShadow: "none",
+    borderBottom: theme.palette.type==='light' ? '1px solid rgba(0, 0, 0, 0.12)':'1px solid rgba(255, 255, 255, 0.12)',
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    backgroundColor: theme.palette.background.default,
   },
   logo: {
     fontFamily: "Work Sans, sans-serif",
@@ -50,18 +71,17 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "space-between",
   },
-  drawerContainer: {
-    padding: "20px 30px",
-  },
   title: {
     flexGrow: 1,
+    paddingLeft: theme.spacing(1),
+    fontWeight: [700],
   },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.black, 0.15),
+    backgroundColor: alpha(theme.palette.common.black, 0.15),
     '&:hover': {
-      backgroundColor: fade(theme.palette.common.black, 0.25),
+      backgroundColor: alpha(theme.palette.common.black, 0.25),
     },
     marginRight: theme.spacing(2),
     marginLeft: 0,
@@ -70,6 +90,12 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: theme.spacing(3),
       width: 'auto',
     },
+  },
+  closeButton: {
+    position: 'absolute',
+    right: theme.spacing(1),
+    top: theme.spacing(1),
+    color: theme.palette.grey[500],
   },
   searchIcon: {
     padding: theme.spacing(0, 2),
@@ -97,42 +123,27 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Navbar(props) {
   const classes = useStyles();
-  const stateCtx = useGlobalState()
-  const mutationCtx = useGlobalMutation()
-  const [search, setSearch] = useState(null);
+  const stateCtx = useGlobalState();
+  const mutationCtx = useGlobalMutation();
 
-  const [state, setState] = useState({
+  const [state, setState] = useState(
+      {
     mobileView: false,
     drawerOpen: false,
     darkMode:  stateCtx.config.darkMode === 'dark',
   });
 
-
   const handleDarkModeToggle = () => {
-    //console.log(!state.darkMode);
     setState({...state, darkMode: !state.darkMode});
-
   };
 
-  /*
-  const handleSearchClick = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      console.log(search);
-    }
-  };
-  */
-
-  const handleSearchChange = (e) => {
-    e.preventDefault();
-    setSearch(e.target.value);
-  };
 
   useEffect(() => {
     mutationCtx.updateConfig({
       darkMode: state.darkMode ? 'dark' : 'light',
     })
   }, [state.darkMode]);
+
 
 
   const {mobileView, drawerOpen} = state;
@@ -149,34 +160,49 @@ export default function Navbar(props) {
     window.addEventListener("resize", () => setResponsiveness());
   }, []);
 
-  const searchBox = (
-    <div className={classes.search}>
-      <div className={classes.searchIcon}>
-        <SearchIcon/>
-      </div>
-      <InputBase
-        onKeyDown={props.handleSearchClick}
-        onChange={handleSearchChange}
-        value={search}
-        placeholder="Search for…"
-        classes={{
-          root: classes.inputRoot,
-          input: classes.inputInput,
-        }}
-        inputProps={{'aria-label': 'search'}}
-      />
-    </div>
-  )
 
+  const SearchBox = (
+        <div className={classes.search}>
+          <div className={classes.searchIcon}>
+            <SearchIcon/>
+          </div>
+          <InputBase
+              onChange={(e)=> {
+                props.setSearchTerm(e.target.value)
+              }}
+              key="appBar-search-input"
+              value={props.searchTerm}
+              placeholder="Search for…"
+              classes={{
+                root: classes.inputRoot,
+                input: classes.inputInput,
+              }}
+              inputProps={{'aria-label': 'search'}}
+          />
+        </div>
+  );
+
+  const DarkSwitchBtn = (
+      <IconButton {...{
+        "aria-label": "menu",
+        "aria-haspopup": "true",
+        onClick: handleDarkModeToggle,
+      }}>
+        {state.darkMode ? <Brightness2Icon />: <Brightness4Icon />}
+      </IconButton>
+  );
 
   const displayDesktop = () => {
     return (
       <Toolbar className={classes.toolbar}>
         {nearLogo}
-        <Divider orientation="vertical" flexItem/>
-        {darkSwitch}
+        {/*<Divider orientation="vertical" flexItem/>*/}
         {appLogo}
         {/*searchBox*/}
+        <Divider className={classes.divider} orientation="vertical" flexItem />
+        {DarkSwitchBtn}
+        <FilterPanel {...props}/>
+        <ColumnSettings {...props}/>
         {getMenuButtons(false)}
       </Toolbar>
     );
@@ -187,6 +213,7 @@ export default function Navbar(props) {
       setState((prevState) => ({...prevState, drawerOpen: true}));
     const handleDrawerClose = () =>
       setState((prevState) => ({...prevState, drawerOpen: false}));
+
 
     return (
       <Toolbar>
@@ -201,7 +228,6 @@ export default function Navbar(props) {
         >
           <MenuIcon/>
         </IconButton>
-
         <Drawer
           {...{
             anchor: "left",
@@ -216,9 +242,12 @@ export default function Navbar(props) {
             <Divider/>
             {getMenuButtons(true)}
           </div>
-
         </Drawer>
-        {searchBox}
+        {getMenuButtons(true)}
+        {SearchBox}
+        <Divider className={classes.divider} orientation="vertical" flexItem />
+        <FilterPanel {...props}/>
+        <ColumnSettings {...props}/>
       </Toolbar>
     );
   };
@@ -226,7 +255,7 @@ export default function Navbar(props) {
 
   const appLogo = (
     <>
-      <Typography variant="h6" component="h1" className={classes.title}>
+      <Typography variant="h5" component="h1" className={classes.title}>
         Sputnik DAO v1 Stats
       </Typography>
     </>
@@ -242,9 +271,10 @@ export default function Navbar(props) {
     />
   );
 
+
   const nearLogo = (
     <img style={state.darkMode ? {filter: "brightness(0) invert(1)"} : null}
-         height="30"
+         height="56"
          src="https://gov.near.org/uploads/default/original/1X/7aa6fc28cbccdc2242717e8fe4c756829d90aaec.png"/>
   );
 
@@ -253,14 +283,13 @@ export default function Navbar(props) {
         <>
         </>
       );
-    }
-  ;
+    };
 
   return (
-    <header>
-      <AppBar color="default">
+    <>
+      <AppBar color="default" className={classes.appBar}>
         {mobileView ? displayMobile() : displayDesktop()}
       </AppBar>
-    </header>
+    </>
   );
 }

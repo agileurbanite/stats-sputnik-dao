@@ -39,48 +39,46 @@ async function queryPg(block_timestamp) {
   return res.rows;
 }
 
-/*
-queryPg(1598366209232845339).then((r) => {
-  //console.log(r);
-}).catch((e) => {
-  console.log(e);
-})
 */
 
-
 const autobahn = require("autobahn");
+
 import {TxActions} from "../imports/api/data";
 
-
-let session;
+let session = null;
 const connection = new autobahn.Connection({
   url: "wss://near-explorer-wamp.onrender.com/ws",
   realm: "near-explorer",
   retry_if_unreachable: true,
   max_retries: 5,
-  max_retry_delay: 10
+  max_retry_delay: 10,
 });
 
-connection.onopen = s => {
+connection.onopen = async (s, details) => {
   session = s;
-  //console.log(session)
-
-/*
-  storeTransactions().then((r) => {
-    console.log('done');
-  }).catch((e) => {
-    console.log(e);
-  })
-*/
-
-
+  session.log();
+  console.log("started indexer update");
+  await storeTransactions().then(
+    () => {
+      connection.close()
+      console.log("finished indexer update");
+    }
+  );
 };
 
-connection.onclose = reason => {
+connection.onclose = (reason, details) => {
+  console.log('connection close');
+  console.log('Reason:');
   console.log(reason);
+  session = null;
 };
 
-connection.open();
+
+connectAndStoreTransactions().then((r) => {
+}).catch((e) => {
+  console.log(e);
+})
+
 
 async function query(q) {
   const procedure = `com.nearprotocol.mainnet.explorer.select`;
@@ -120,12 +118,12 @@ async function getTransactions(block_timestamp) {
      ORDER BY t.block_timestamp ASC
      LIMIT :limit
     `, {
-      limit: 300,
+      limit: 50,
       block_timestamp: block_timestamp
     }
-  ]).then(data => {
+  ]).then((data) => {
       //console.log(data)
-      console.log(data.length)
+      console.log(data.length);
       return data;
     }
   ).catch((e) => {
@@ -138,14 +136,19 @@ if (Meteor.isServer) {
   SyncedCron.add({
     name: 'Fetch Transactions',
     schedule: function (parser) {
-      return parser.text('every 1 minutes');
+      return parser.text('every 5 minutes');
     },
     job: async function () {
-      await storeTransactions()
+      await connectAndStoreTransactions();
     }
   });
 }
 
+async function connectAndStoreTransactions() {
+  if (!connection.isOpen) {
+    connection.open();
+  }
+}
 
 async function storeTransactions() {
   let d = new Date();
@@ -154,7 +157,7 @@ async function storeTransactions() {
   /* To received the data from Epoch2, uncomment below */
   //let blockTimestamp = 1598366209232845339;
   /* -------------------------------------------------- */
-  let len = 300;
+  let len = 50;
   let offset = 0;
   while (len > 0) {
     const transactions = await getTransactions(blockTimestamp);
@@ -162,7 +165,7 @@ async function storeTransactions() {
       len = transactions.length;
     } else {
       len = 0;
-      console.log('most likely an error occurred')
+      console.log('most likely an error occurred');
     }
     if (len > 1) {
 
@@ -210,40 +213,3 @@ async function storeTransactions() {
     }
   }
 }
-
-/*
-async function consolidateData() {
-  const data = TxActions.find({"action_kind": "TRANSFER"}).fetch();
-  for (const item of data) {
-    //console.log(data);
-    try {
-      ConsolidatedDataDeposits.update(
-        {
-          kind: item.action_kind,
-          dao: item.predecessor_account_id,
-          signer_account_id: item.signer_account_id,
-          receiver_account_id: item.receiver_account_id,
-        },
-        {
-          kind: item.action_kind,
-          dao: item.predecessor_account_id,
-          signer_account_id: item.signer_account_id,
-          receiver_account_id: item.receiver_account_id,
-          deposit: item.args.deposit,
-
-        },
-        {upsert: true}
-      )
-    } catch (e) {
-      console.log(e);
-    }
-
-  }
-}
-
-consolidateData().then((r) => {
-  //console.log(r)
-}).catch((e) => {
-  console.log(e);
-});
-*/

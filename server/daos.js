@@ -9,7 +9,6 @@ export const factory = 'sputnikdao.near';
 export const todayDate = new Date().toISOString().slice(0, 10);
 
 export const NEAR_RPC_URL = 'https://rpc.mainnet.near.org'
-//export const NEAR_RPC_URL = 'http://45.157.177.152:3030';
 const provider = new nearApi.providers.JsonRpcProvider(NEAR_RPC_URL);
 const connection = new nearApi.Connection(NEAR_RPC_URL, provider, {});
 const account = new nearApi.Account(connection, '');
@@ -121,7 +120,7 @@ if (Meteor.isServer) {
   SyncedCron.add({
     name: 'Fetch Dao Data',
     schedule: function (parser) {
-      return parser.text('every 10 minutes');
+      return parser.text('every 12 minutes');
     },
     job: async function () {
       await storeDaoList()

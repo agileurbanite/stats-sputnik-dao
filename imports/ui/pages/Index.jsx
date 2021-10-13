@@ -14,8 +14,8 @@ import {DaoData, NearPrice, TxActions} from "../../api/data";
 import IconButton from "@material-ui/core/IconButton";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import SearchIcon from "@material-ui/icons/Search";
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
+import { LineChart, Line,BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import moment from 'moment';
 
 const yoctoNEAR = 1000000000000000000000000;
 
@@ -229,8 +229,15 @@ const Index = () => {
         padding: '0 16px',
       },
     },
-    toolbarExport: {
-
+    chartLabel: {
+        fontSize: 6,
+        padding: 0,
+        margin: 0,
+    },
+    chartIntro:{
+        fontSize: 6,
+        padding: 0,
+        margin: 0,
     },
     gridFilterPanel: {
       width: 'fit-content',
@@ -263,56 +270,145 @@ const Index = () => {
     window.open("https://sputnik.fund/#/" + value, '_blank').focus();
   }
 
-  const getMonthTotalActivity = () =>{
-    const currYear = new Date().getFullYear();
-    const currMonth = new Date().getMonth()+1;
+  let monthTotalActivity = [];
+  let monthTotalDeposits = [];
+  const last30day = moment().add(-30, 'days');
+
+
+ const getMonthTotalActivity = () => {
     const monthActions = [...txActions].filter( act => {
       const actionDate = new Date(parseInt(act.block_timestamp.toString().substring(0, 13)));
-      return actionDate.getFullYear() === currYear
-          && actionDate.getMonth()+1 === currMonth
-    }) || [];
+      return Date.parse(actionDate) >= Date.parse(last30day) }) || [];
     return monthActions;
   }
 
-  const getMonthDAOActivity = (daoName) =>{
-    return getMonthTotalActivity().filter(act => act.receiver_account_id === daoName);
+    const getMonthTotalDeposits = () => {
+        const monthActions = [...allDeposits].filter( dep => {
+            const depDate = new Date(parseInt(dep.block_timestamp.toString().substring(0, 13)));
+            return Date.parse(depDate) >= Date.parse(last30day) }) || [];
+        return monthActions;
+    }
+
+    if (!isLoadingAllDeposits){
+        monthTotalDeposits = getMonthTotalDeposits();
+    }
+
+    if (!isLoadingTxActions){
+        monthTotalActivity = getMonthTotalActivity();
+    }
+
+
+    const getMonthDAOActivity = (daoName) => {
+        return monthTotalActivity.filter(act => act.receiver_account_id === daoName);
+    }
+
+
+  const ChartLockedTokens = (props) => {
+    const {monthTotalDeposits, daoName} = props.options.value;
+
+    let data = [];
+    for (let i=0; i<=30; i++){
+      const date = moment(last30day,'yyyymmdd').add(i, 'days').format('YYYYMMDD');
+      data.push({date, count: 0, total: 0});
+    }
+    for (const action of monthTotalDeposits){
+      const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMMDD');
+        const dp = data.find( item => {
+            return item.date === actionDate
+        });
+      if (action.predecessor_account_id === daoName){
+          dp.count = dp.count +  1;
+          dp.total = dp.total + 1;
+      } else {
+          dp.total = dp.total +1;
+      }
+    }
+
+      const CustomTooltip = ({ active, payload, label }) => {
+          if (active) {
+              const date = moment(label).format('DD MMM');
+              return (
+                  <>
+                  <Box>
+                      <p style={{fontSize: "10px", padding: 2}}>
+                          {date} DAO:{payload[0].value} Total:{payload[1].value}
+                      </p>
+                  </Box>
+              </>
+              );
+          }
+          return null;
+      };
+
+    return (
+        <>
+            {
+                !props.options.value.loading ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                                width={300}
+                                height={150}
+                                data={data}>
+                                <XAxis dataKey="date" hide/>
+                                <YAxis hide type="number" minTickGap={1} scale="sqrt" ticks={[0,1,2,3,4,5,10,50, 100, 150, 200]} tickCount={1} domain={[0, 'dataMax']}/>
+                                <Tooltip wrapperStyle={{backgroundColor: stateCtx.config.darkMode==='light' ? '#eef2f6a3' : '#161a207a'}} content={<CustomTooltip />}/>
+                                <Line type="monotone" dataKey="count"  stroke="#8884d8" />
+                                <Line type="monotone" dataKey="total"  stroke="#ff7300" />
+                            </LineChart>
+                        </ResponsiveContainer>) :
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress />
+                    </Box>
+            }
+        </>
+    )
   }
-
-
+  
   const ChartActivity = (props) => {
-    const total =  props.options.value.total;
-    const month = props.options.value.month;
-    const curr = (month*100)/total;
-    const data = [
-      {
-        name: props.options.value.daoName,
-        total: total,
-        month:  month,
-        amt: (total - month),
-      },
-    ];
+    const {monthDAOActivity} = props.options.value;
 
-    const CustomizedLabel =({x, y, fill, value}) => {
-      return (
-          <text x={x} y={y} dy={5} fontFamily='sans-serif' fill={fill} fontSize={10}>
-            {total}/{month}
-          </text>
-      )
-    };
+    let data = [];
 
+    for (let i=0; i<=30; i++){
+      const date = moment(last30day,'yyyymmdd').add(i, 'days').format('YYYYMMDD');
+      data.push({date, count: 0});
+    }
+
+    for (const action of monthDAOActivity){
+      const actionDate = moment(action.block_timestamp.toString().substring(0, 13),'x').format('YYYYMMDD');
+      const di = data.find( item => {
+          return item.date === actionDate
+      });
+      if (di){
+        di.count = di.count +  1;
+      }
+    }
+
+      const CustomTooltip = ({ active, payload, label }) => {
+          if (active) {
+              const date = moment(label).format('DD MMM');
+              return (
+                  <div className="custom-tooltip">
+                      <p style={{fontSize: "10px", padding: 2}}>
+                          {date} DAO:{payload[0].value}
+                      </p>
+                  </div>
+              );
+          }
+          return null;
+      };
 
     return (
         <>
           {
             !props.options.value.loading ? (
-                    <ResponsiveContainer width="100%" height="35%">
-                      <BarChart width={150}
-                                height={75} data={data} layout="vertical">
-                        <XAxis type="number" hide/>
-                        <YAxis type="category" dataKey="name" hide/>
-                        <Bar  dataKey="month" stackId="a" fill="#8884d8"/>
-                        <Bar dataKey="amt" stackId="a" fill="#82ca9d"/>
-                      </BarChart>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart width={300} height={150} data={data}>
+                        <XAxis dataKey="date"  hide/>
+                        <YAxis type="number" minTickGap={1} scale="sqrt" ticks={[0,1,2,3,4,5,10]} tickCount={1} domain={[0, 'dataMax']} hide/>
+                          <Tooltip wrapperStyle={{background: stateCtx.config.darkMode==='light' ? '#eef2f6a3' : '#161a207a'}} content={<CustomTooltip />}  />
+                        <Line type="monotone" dataKey="count" stroke="#00bcd4" strokeWidth='1' dot={false} />
+                      </LineChart>
                     </ResponsiveContainer>) :
                 <Box sx={{ width: '100%' }}>
                   <LinearProgress />
@@ -344,7 +440,7 @@ const Index = () => {
     {
       field: 'activity',
       headerName: 'Activity',
-      width: 250,
+      width: 180,
       disableClickEventBubbling: true,
       renderCell: (params) => (
           <ChartActivity
@@ -360,6 +456,17 @@ const Index = () => {
       type: 'number',
       valueFormatter: params => `$${params.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`,
       sortable: false
+    },
+    {
+      field: 'deposits',
+      headerName: 'Locked tokens',
+      width: 180,
+      disableClickEventBubbling: true,
+      renderCell: (params) => (
+          <ChartLockedTokens
+              options={params}
+          />
+      )
     },
     {field: 'proposals', headerName: 'Proposals', type: 'number', width: 140},
     {field: 'progress', headerName: 'In Progress', type: 'number', width: 150},
@@ -416,9 +523,13 @@ const Index = () => {
         id: id,
         activity: {
           daoName: item.daoName,
-          total: !isLoadingTxActions ? getMonthTotalActivity().length : 0,
-          month: !isLoadingTxActions ? getMonthDAOActivity(item.daoName).length : 0,
+          monthDAOActivity: !isLoadingTxActions ? getMonthDAOActivity(item.daoName) : [],
           loading: isLoadingTxActions,
+        },
+        deposits: {
+          daoName: item.daoName,
+          monthTotalDeposits: !isLoadingAllDeposits ? monthTotalDeposits: [],
+          loading: isLoadingAllDeposits,
         },
         daoName: item.daoName,
         nearAmount: new Decimal(item.amount / yoctoNEAR).toFixed(0),
@@ -527,16 +638,6 @@ const Index = () => {
     console.log('e.target.value', e.target.value)
     setSearchTerm(e.target.value);
   };
-
-
-  const getTotalActivity = () => {
-    return txActions ? txActions.length: 0;
-  }
-
-  const getTotalActivityByDAO = (daoName) => {
-    return txActions.filter(action=>action.receiver_account_id===daoName).length;
-  }
-
 
 
   const GridFilterBtn = (props) => {
