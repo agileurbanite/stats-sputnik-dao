@@ -12,8 +12,6 @@ function App() {
   const stateCtx = useGlobalState();
   const mutationCtx = useGlobalMutation();
 
-    console.log(stateCtx.config.darkMode);
-
   let theme = React.useMemo(
     () =>
       createTheme({
